@@ -60,6 +60,7 @@ export type SiteData = {
 };
 
 const serverApi = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const FETCH_TIMEOUT_MS = 1800;
 
 const fallback: SiteData = {
   settings: {
@@ -90,9 +91,16 @@ const fallback: SiteData = {
   articles: []
 };
 
+async function cmsFetch(path: string): Promise<Response> {
+  return fetch(`${serverApi}${path}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+  });
+}
+
 export async function getSite(): Promise<SiteData> {
   try {
-    const response = await fetch(`${serverApi}/api/v1/public/site`, { next: { revalidate: 30 } });
+    const response = await cmsFetch("/api/v1/public/site");
     if (!response.ok) throw new Error(`CMS returned ${response.status}`);
     return await response.json();
   } catch {
@@ -102,7 +110,7 @@ export async function getSite(): Promise<SiteData> {
 
 export async function getPage(slug: string): Promise<PageRecord | null> {
   try {
-    const response = await fetch(`${serverApi}/api/v1/public/pages/${slug}`, { next: { revalidate: 30 } });
+    const response = await cmsFetch(`/api/v1/public/pages/${slug}`);
     if (!response.ok) return null;
     return await response.json();
   } catch {
