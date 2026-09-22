@@ -34,6 +34,8 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://lelefa:${POSTGRES_PASSWORD}@db:5432/lelefachambers}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       UPLOAD_DIR: /app/uploads
+      LEGAL_VAULT_DIR: /app/legal-vault
+      MAX_LEGAL_DOCUMENT_MB: ${MAX_LEGAL_DOCUMENT_MB:-25}
     depends_on:
       db:
         condition: service_healthy
@@ -41,6 +43,7 @@ services:
         condition: service_healthy
     volumes:
       - uploads_data:/app/uploads
+      - legal_vault_data:/app/legal-vault
     ports:
       - "8000:8000"
 
@@ -61,3 +64,4 @@ volumes:
   postgres_data:
   redis_data:
   uploads_data:
+  legal_vault_data:
