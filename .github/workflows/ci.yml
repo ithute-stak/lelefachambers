@@ -29,6 +29,7 @@ jobs:
       - working-directory: apps/api
         run: pytest -q
         env:
+          PYTHONPATH: "."
           DATABASE_URL: "sqlite+pysqlite:///:memory:"
           JWT_SECRET: "ci-secret-only"
           BOOTSTRAP_ADMIN_PASSWORD: "ci-admin-password"
