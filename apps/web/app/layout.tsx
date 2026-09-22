@@ -2,13 +2,35 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSite } from "@/lib/api";
 import "./globals.css";
+import "./brand.css";
 
 export const dynamic = "force-dynamic";
+
+const brandMark = "/brand/lelefa-chambers-mark.png";
+const brandLogo = "/brand/lelefa-chambers-logo.webp";
 
 export const metadata: Metadata = {
   title: "Lelefa Chambers | Legal Strategy. Litigation. Recovery.",
   description: "Lelefa Chambers provides litigation, debt recovery, commercial, compliance and mediation services in Lesotho.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://lelefachambers.co.ls")
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://lelefachambers.co.ls"),
+  icons: {
+    icon: [{ url: brandMark, type: "image/png" }],
+    shortcut: brandMark,
+    apple: brandMark
+  },
+  openGraph: {
+    title: "Lelefa Chambers | Legal Strategy. Litigation. Recovery.",
+    description: "Lelefa Chambers provides litigation, debt recovery, commercial, compliance and mediation services in Lesotho.",
+    type: "website",
+    siteName: "Lelefa Chambers",
+    images: [{ url: brandLogo, alt: "Lelefa Chambers" }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lelefa Chambers | Legal Strategy. Litigation. Recovery.",
+    description: "Legal strategy, litigation and recovery services in Lesotho.",
+    images: [brandLogo]
+  }
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -34,7 +56,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <header className="site-header">
           <div className="shell nav-shell">
             <Link className="brand" href="/" aria-label="Lelefa Chambers home">
-              <span className="brand-mark">LC</span>
+              <img className="brand-mark-image" src={brandMark} alt="" width={54} height={54} />
               <span className="brand-copy">
                 <strong>Lelefa Chambers</strong>
                 <small>Advocates • Lesotho</small>
@@ -57,7 +79,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <footer className="footer">
           <div className="shell footer-grid">
             <div>
-              <div className="footer-brand">Lelefa Chambers</div>
+              <div className="footer-logo-wrap">
+                <img className="footer-logo" src={brandLogo} alt="Lelefa Chambers — Law for a brighter tomorrow" />
+              </div>
               <p>Professional legal representation, dispute resolution and controlled legal-recovery services in Lesotho.</p>
             </div>
             <div>

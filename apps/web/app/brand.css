@@ -1,0 +1,61 @@
+.brand-mark-image{
+  width:54px;
+  height:54px;
+  object-fit:contain;
+  flex:0 0 auto;
+  filter:drop-shadow(0 3px 8px rgba(14,42,70,.14));
+}
+
+.footer-logo-wrap{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  max-width:310px;
+  padding:12px 14px;
+  margin-bottom:8px;
+  border-radius:16px;
+  background:rgba(255,255,255,.96);
+  border:1px solid rgba(205,164,97,.35);
+}
+
+.footer-logo{
+  display:block;
+  width:100%;
+  max-width:280px;
+  height:auto;
+}
+
+.hero-brand-line{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:8px;
+}
+
+.hero-brand-emblem{
+  width:52px;
+  height:52px;
+  object-fit:contain;
+  padding:5px;
+  border-radius:14px;
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(213,176,107,.45);
+  box-shadow:0 12px 30px rgba(0,0,0,.16);
+}
+
+.admin-brand-mark{
+  width:30px;
+  height:30px;
+  object-fit:contain;
+  padding:2px;
+  border-radius:8px;
+  background:#fff;
+  border:1px solid rgba(205,164,97,.45);
+}
+
+@media(max-width:680px){
+  .brand-mark-image{width:46px;height:46px}
+  .brand-copy strong{font-size:1.02rem}
+  .footer-logo-wrap{max-width:280px}
+  .hero-brand-emblem{width:46px;height:46px}
+}
