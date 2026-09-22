@@ -88,7 +88,7 @@ jobs:
           push: true
           platforms: linux/amd64
           build-args: |
-            NEXT_PUBLIC_API_URL=https://api.lelefachambers.co.ls
+            NEXT_PUBLIC_API_URL=https://lelefachambers.co.ls
             NEXT_PUBLIC_SITE_URL=https://lelefachambers.co.ls
             SERVER_API_URL=http://api:8000
           tags: ${{ steps.meta.outputs.tags }}
