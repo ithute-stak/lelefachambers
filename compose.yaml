@@ -45,7 +45,7 @@ services:
       - uploads_data:/app/uploads
       - legal_vault_data:/app/legal-vault
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
 
   worker:
     build: ./apps/api
@@ -79,7 +79,7 @@ services:
     depends_on:
       - api
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
 volumes:
   postgres_data:
