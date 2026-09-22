@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from redis import Redis
@@ -36,13 +37,47 @@ def _security_posture() -> dict[str, object]:
     environment = os.getenv("APP_ENV", "development").lower()
     placeholder_tokens = {"development-only-change-me", "change-me", "ci-secret-only"}
     jwt_is_placeholder = settings.jwt_secret in placeholder_tokens or len(settings.jwt_secret) < 32
+    vault_dir = Path(os.getenv("LEGAL_VAULT_DIR", "/app/legal-vault"))
     return {
         "environment": environment,
         "jwt_secret_strength_ok": not jwt_is_placeholder,
         "cors_restricted": "*" not in settings.cors_origins,
         "database_url_present": bool(settings.database_url),
         "redis_url_present": bool(settings.redis_url),
+        "private_vault_exists": vault_dir.exists(),
+        "private_vault_is_directory": vault_dir.is_dir() if vault_dir.exists() else False,
     }
+
+
+def _validate_production_configuration() -> list[str]:
+    if os.getenv("APP_ENV", "development").lower() != "production":
+        return []
+
+    failures: list[str] = []
+    posture = _security_posture()
+    if not posture["jwt_secret_strength_ok"]:
+        failures.append("JWT_SECRET must be a strong non-placeholder secret of at least 32 characters")
+    if not posture["cors_restricted"]:
+        failures.append("CORS_ORIGINS must not contain a wildcard in production")
+    if not settings.database_url.startswith("postgresql"):
+        failures.append("Production DATABASE_URL must use PostgreSQL")
+    if not settings.redis_url.startswith("redis"):
+        failures.append("Production REDIS_URL must point to Redis")
+    if os.getenv("BOOTSTRAP_ADMIN_PASSWORD", "") in {"", "change-me", "CHANGE_THIS_ADMIN_PASSWORD"}:
+        failures.append("BOOTSTRAP_ADMIN_PASSWORD must be changed before production startup")
+    if os.getenv("ITHUTE_PAY_ENABLED", "false").lower() == "true":
+        if os.getenv("ITHUTE_PAY_API_KEY", "").startswith("CHANGE_THIS_"):
+            failures.append("ITHUTE_PAY_API_KEY must be configured when Ithute Pay is enabled")
+        if os.getenv("ITHUTE_PAY_WEBHOOK_SECRET", "").startswith("CHANGE_THIS_"):
+            failures.append("ITHUTE_PAY_WEBHOOK_SECRET must be configured when Ithute Pay is enabled")
+    return failures
+
+
+@router.on_event("startup")
+def production_startup_guard() -> None:
+    failures = _validate_production_configuration()
+    if failures:
+        raise RuntimeError("Unsafe production configuration: " + "; ".join(failures))
 
 
 @router.get("/health/live")
