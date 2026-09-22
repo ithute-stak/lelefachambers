@@ -1,71 +1,121 @@
 # Lelefa Chambers
 
-Dynamic public website and Chambers administration platform for **Lelefa Chambers**, Maseru, Lesotho.
+Dynamic public website and legal-practice operations platform for **Lelefa Chambers**, Maseru, Lesotho.
 
 Primary production domain: **https://lelefachambers.co.ls**
 
 ## What this project is
 
-This repository is not a hard-coded brochure site. It is the first layer of the **Lelefa Chambers Digital Legal Practice Platform**:
+This repository is the evolving **Lelefa Chambers Digital Legal Practice Platform**, not a hard-coded brochure site.
 
-- a public legal-practice website;
-- a PostgreSQL-backed content management system;
+It now includes:
+
+- a dynamic public legal-practice website;
+- a PostgreSQL-backed CMS;
 - a secure Chambers administration workspace;
-- professional profiles and credential-ready records;
-- legal insights publishing with controlled status;
-- consultation intake and internal assignment;
-- institutional debt-recovery positioning;
+- consultations and professional profiles;
+- legal clients and matters;
+- matter parties, conflict checks, court diary and legal tasks;
+- Lelefa Debt Collectors legal-referral intake;
+- professional credentials and user administration;
+- a private legal-document vault;
+- settlements, judgments and execution tracking;
+- recovery-payment matching and remittance status;
+- an institutional client portal;
 - role-based access and audit history;
-- a foundation for later legal matter/client portal features.
+- PostgreSQL and legal-vault backup utilities.
 
 ## Architecture
 
-- `apps/web` — Next.js public website and `/chambers-admin` CMS interface
-- `apps/api` — FastAPI API, PostgreSQL domain model, authentication, RBAC and audit trail
-- PostgreSQL — dynamic website, professional, enquiry and future matter data
-- Redis — cache/job/realtime foundation
-- file volume — controlled media assets; production storage can later move behind an object-storage adapter
+- `apps/web` — Next.js public website, Chambers CMS, legal operations, recovery workspace and institutional client portal
+- `apps/api` — FastAPI API, PostgreSQL domain model, authentication, RBAC, recovery ledger and audit trail
+- PostgreSQL — website, professional, client, matter, recovery and portal records
+- Redis — cache/job/realtime foundation for upcoming reminder and notification workers
+- public media volume — CMS images/PDFs
+- private legal-vault volume — authenticated matter documents only
 - Docker Compose — local and deployment-oriented orchestration
 
 ```text
 lelefachambers.co.ls
         |
         v
-    Next.js web
-        |
-        v
-      FastAPI
-        |
-   +----+-----+
-   |          |
-PostgreSQL   Redis
-   |
-CMS / professionals / consultations / audit
+      Next.js
+   +----+---------------------------+
+   |        |            |          |
+ Public    CMS      Legal Ops   Client Portal
+ Website             Recovery
+   |        |            |          |
+   +--------+-----+------+----------+
+                  |
+                  v
+               FastAPI
+                  |
+       +----------+----------+
+       |                     |
+   PostgreSQL              Redis
+       |
+ Legal clients / matters / settlements /
+ judgments / payments / portal access
+       |
+ Private Legal Document Vault
 ```
 
-## Phase 1 capabilities
+## Phase 1 — Dynamic website and CMS
 
-### Public website
 - premium responsive Chambers design;
-- dynamic home page and CMS-driven pages;
+- CMS-driven pages and homepage content;
 - practice areas;
 - professional profiles;
 - legal insights/publications;
-- financial-institution and debt-recovery positioning;
-- consultation request form with minimum-necessary public intake;
-- SEO metadata and security headers.
-
-### Administration
-- `/chambers-admin` login;
-- system-owner bootstrap through environment variables;
-- roles for System Owner, Chambers Administrator, Managing Advocate, Advocate, Content Editor, Reception and Auditor;
-- pages, practice areas, professional profiles, legal insights and consultation records;
+- financial-institution positioning;
+- consultation request workflow;
+- SEO metadata and security headers;
 - draft/review/published/archived content lifecycle;
-- audit trail for content and consultation changes;
-- image/PDF media upload API with file-type and size controls.
+- audit logging.
 
-### Data boundaries
-The public website never receives private matter data. The API exposes only `published` public records through public endpoints. Private Chambers administration endpoints require a bearer session and permission checks. Future matter/client-portal data must remain behind separate authenticated routes and database authorization rules.
+## Phase 2 — Legal operations
+
+`/chambers-admin/operations`
+
+- legal clients;
+- legal matters and Chambers references;
+- matter parties;
+- conflict checking and reviewer decisions;
+- court diary/events;
+- legal tasks and deadlines;
+- professional credential register;
+- Chambers user administration;
+- Lelefa Debt Collectors legal-referral bridge with conflict and human-review gates.
+
+## Phase 3 — Recovery and institutional portal
+
+`/chambers-admin/recovery`
+
+- private matter-document vault;
+- document visibility controls (`internal` / `client`);
+- SHA-256 document checksums;
+- settlement register;
+- judgment register;
+- execution/enforcement register;
+- recovery-payment ledger;
+- matching/unallocated/reversed payment states;
+- remittance status;
+- recovery dashboard and alerts;
+- institutional client portal user provisioning.
+
+`/client-portal`
+
+Authorised institutional clients can view only their organisation's matters, including:
+
+- matter stage/status;
+- client-visible documents;
+- settlements;
+- judgments;
+- execution activity;
+- matched recovery payments;
+- recorded recovery totals.
+
+Private Chambers notes and internal-only documents are not returned through client-portal endpoints.
 
 ## Local development
 
@@ -87,50 +137,94 @@ docker compose up -d --build
 
 - Public website: `http://localhost:3000`
 - Chambers CMS: `http://localhost:3000/chambers-admin`
+- Legal Operations: `http://localhost:3000/chambers-admin/operations`
+- Recovery Workspace: `http://localhost:3000/chambers-admin/recovery`
+- Institutional Client Portal: `http://localhost:3000/client-portal`
 - API docs: `http://localhost:8000/docs`
 - API health: `http://localhost:8000/health`
 
 The first API startup creates the schema, seeds initial public Chambers content and creates the bootstrap system-owner account from the environment. Change the bootstrap password after first use before any production launch.
 
-## Content publishing model
+## Lelefa Debt Collectors integration
 
-Content is stored in PostgreSQL with these lifecycle states:
+The recovery referral bridge is disabled until `LELEFA_DEBT_COLLECTORS_API_KEY` is configured with a strong production secret.
+
+A referral follows this pattern:
 
 ```text
-DRAFT -> REVIEW -> PUBLISHED -> ARCHIVED
+Lelefa Debt Collectors
+        |
+        v
+Authenticated legal referral
+        |
+        v
+Duplicate check
+        |
+        v
+Conflict screening
+        |
+        v
+Human Chambers review
+   +----+----+
+   |         |
+ Accept    Decline
+   |
+   v
+Client + legal matter created
 ```
 
-A Content Editor can draft/submit content, while privileged roles control publication. Every write is recorded in the audit log. This is deliberate because legal content, practitioner profiles and institutional capability statements should not be published without accountability.
+The source collection system remains authoritative for creditor/source balances unless a future integration contract explicitly changes that responsibility.
 
-## Future legal-practice expansion
+## Backups
 
-The current boundaries are designed so Phase 2 can add, without rebuilding the public CMS:
+PostgreSQL:
 
-- institutional client portal;
-- legal matters and parties;
-- conflict checking;
-- legal diary/court dates;
-- evidence/document packs;
-- settlement and payment monitoring;
-- judgments and execution tracking;
-- Lelefa Debt Collectors legal-referral API;
-- Ithute Pay recovery/reconciliation integration;
-- client reporting and dashboards.
+```bash
+scripts/backup-postgres.sh
+```
+
+Private legal-document vault:
+
+```bash
+scripts/backup-legal-vault.sh
+```
+
+Both generate SHA-256 checksum files. Production backups should be copied off-server into encrypted storage with tested restore procedures.
 
 ## Validation
 
-Pull requests run checks for:
+Pull requests validate:
 
 - Python API compile/import;
+- pytest model/route/role tests;
 - Next.js production build;
-- Docker Compose configuration.
+- Docker Compose configuration;
+- PostgreSQL backup/restore script syntax;
+- private legal-vault backup script syntax.
 
 ## Security rules
 
 - no production secrets in Git;
 - PostgreSQL is never exposed directly to the browser;
-- provider/payment credentials stay in their owning service;
 - public consultation forms request only minimum-necessary information;
-- sensitive legal documents must move to an authenticated workflow rather than the public contact form;
+- legal matter documents are not served through the public media mount;
+- private document download requires authenticated API authorization;
 - authorization is enforced on the API, not only hidden in the UI;
-- media uploads are type/size restricted and should be malware-scanned before a later document-management release permits legal evidence uploads.
+- client-portal users are scoped to one institutional client record;
+- provider/payment credentials remain in their owning service;
+- production document handling should add malware scanning, encrypted off-server storage, formal retention controls and tested disaster recovery.
+
+## Next work
+
+The strongest next phase is:
+
+- Alembic migration baseline and versioned schema changes;
+- settlement installment schedules and broken-arrangement automation;
+- Redis-backed reminders for court dates, settlement dues and credential expiry;
+- Ithute Pay recovery/reconciliation integration;
+- richer client statements and downloadable institutional reports;
+- private object storage with malware scanning and encryption;
+- end-to-end browser tests;
+- monitored production deployment to `lelefachambers.co.ls`.
+
+See `docs/LEGAL_OPERATIONS.md` and `docs/LEGAL_RECOVERY_PHASE_3.md` for the detailed operating model.
