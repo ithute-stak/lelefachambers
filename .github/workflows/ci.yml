@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - feature/dynamic-cms-foundation
+      - feature/chambers-operations-phase-2
 
 jobs:
   api:
@@ -18,12 +19,21 @@ jobs:
           cache: pip
           cache-dependency-path: apps/api/requirements.txt
       - run: pip install -r apps/api/requirements.txt
-      - run: python -m compileall apps/api/app
-      - run: python -c "import sys; sys.path.insert(0, 'apps/api'); import app.main; print('API import OK')"
+      - run: python -m compileall apps/api/app apps/api/tests
+      - run: python -c "import sys; sys.path.insert(0, 'apps/api'); import app.server; print('Combined API import OK')"
         env:
           DATABASE_URL: "sqlite+pysqlite:///:memory:"
           JWT_SECRET: "ci-secret-only"
           BOOTSTRAP_ADMIN_PASSWORD: "ci-admin-password"
+          LELEFA_DEBT_COLLECTORS_API_KEY: "ci-integration-key"
+      - working-directory: apps/api
+        run: pytest -q
+        env:
+          PYTHONPATH: "."
+          DATABASE_URL: "sqlite+pysqlite:///:memory:"
+          JWT_SECRET: "ci-secret-only"
+          BOOTSTRAP_ADMIN_PASSWORD: "ci-admin-password"
+          LELEFA_DEBT_COLLECTORS_API_KEY: "ci-integration-key"
 
   web:
     runs-on: ubuntu-latest
@@ -46,5 +56,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cp .env.example .env
-      - run: sed -i 's/CHANGE_THIS_DATABASE_PASSWORD/ci-db-password/g; s/CHANGE_THIS_LONG_RANDOM_SECRET/ci-jwt-secret/g; s/CHANGE_THIS_ADMIN_PASSWORD/ci-admin-password/g' .env
+      - run: sed -i 's/CHANGE_THIS_DATABASE_PASSWORD/ci-db-password/g; s/CHANGE_THIS_LONG_RANDOM_SECRET/ci-jwt-secret/g; s/CHANGE_THIS_ADMIN_PASSWORD/ci-admin-password/g; s/CHANGE_THIS_DEBT_COLLECTORS_INTEGRATION_KEY/ci-integration-key/g' .env
       - run: docker compose config >/dev/null
+      - run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh
