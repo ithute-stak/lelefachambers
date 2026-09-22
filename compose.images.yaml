@@ -1,0 +1,89 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lelefachambers}
+      POSTGRES_USER: ${POSTGRES_USER:-lelefa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lelefa} -d ${POSTGRES_DB:-lelefachambers}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    image: ghcr.io/ithute-stak/lelefachambers-api:${LELEFA_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://lelefa:${POSTGRES_PASSWORD}@db:5432/lelefachambers}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      UPLOAD_DIR: /app/uploads
+      LEGAL_VAULT_DIR: /app/legal-vault
+      MAX_LEGAL_DOCUMENT_MB: ${MAX_LEGAL_DOCUMENT_MB:-25}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+      - legal_vault_data:/app/legal-vault
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  worker:
+    image: ghcr.io/ithute-stak/lelefachambers-api:${LELEFA_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    command: ["python", "-m", "app.worker"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://lelefa:${POSTGRES_PASSWORD}@db:5432/lelefachambers}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      LEGAL_VAULT_DIR: /app/legal-vault
+      AUTOMATION_SCAN_SECONDS: ${AUTOMATION_SCAN_SECONDS:-60}
+      REMINDER_REDIS_STREAM: ${REMINDER_REDIS_STREAM:-lelefa:chambers:reminders}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    volumes:
+      - legal_vault_data:/app/legal-vault
+
+  web:
+    image: ghcr.io/ithute-stak/lelefachambers-web:${LELEFA_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SERVER_API_URL: ${SERVER_API_URL:-http://api:8000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.lelefachambers.co.ls}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://lelefachambers.co.ls}
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
+  legal_vault_data:
