@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250" role="img" aria-labelledby="title desc">
+  <title id="title">Lelefa Chambers</title>
+  <desc id="desc">Lelefa Chambers full navy and gold logo with legal emblem and tagline Law for a Brighter Tomorrow.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1"><stop stop-color="#a66f20"/><stop offset=".48" stop-color="#e0b65c"/><stop offset="1" stop-color="#b47a27"/></linearGradient>
+    <linearGradient id="n" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#052845"/><stop offset="1" stop-color="#0a3b63"/></linearGradient>
+  </defs>
+  <g transform="translate(10 8)">
+    <path d="M38 23h78v8H38zm6 12h66l-6 8H50z" fill="url(#g)"/>
+    <path d="M52 48h46v108H52z" fill="url(#n)"/>
+    <path d="M62 55h5v92h-5zm12 0h5v92h-5zm12 0h5v92h-5z" fill="url(#g)"/>
+    <path d="M44 157h72v11H44zm-6 14h82v12H38zm-4 15h88v13H34z" fill="url(#n)"/>
+    <path d="M40 171h8v12h-8zm10 0h4v12h-4zm-12 15h8v13h-8zm10 0h4v13h-4z" fill="url(#g)"/>
+    <path d="M108 53c22-18 64-19 86 2 15 14 22 33 21 54h-12c0-18-6-33-17-43-14-13-36-14-52-5-17 9-27 25-27 46 0 21 9 37 25 47 16 10 37 10 53 1 12-7 19-18 22-32h12c-3 20-13 36-29 46-22 14-52 14-73 0-20-13-31-35-31-61 0-23 8-42 22-55z" fill="url(#n)"/>
+    <path d="M163 66v70M132 82h63" stroke="url(#g)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M139 83l-11 29m59-29 11 29" stroke="#c89439" stroke-width="2.6"/>
+    <path d="M117 112h24c-3 13-20 13-24 0zm69 0h24c-3 13-20 13-24 0z" fill="url(#g)"/>
+    <path d="M155 136h16l7 8h-30z" fill="url(#g)"/>
+    <path d="M89 158c24 1 45 8 62 24 17-16 38-23 62-24l-10 31c-20-1-36 5-52 19-16-14-33-20-53-19z" fill="#fff" stroke="url(#g)" stroke-width="4"/>
+    <path d="M151 182v26" stroke="#083456" stroke-width="3"/>
+  </g>
+  <text x="250" y="111" fill="#082f50" font-family="Georgia, 'Times New Roman', serif" font-size="63" letter-spacing="2">LELEFA CHAMBERS</text>
+  <path d="M252 132h585" stroke="url(#g)" stroke-width="2"/>
+  <text x="252" y="167" fill="#ad7928" font-family="Arial, Helvetica, sans-serif" font-size="19" letter-spacing="8">LAW FOR A BRIGHTER TOMORROW</text>
+</svg>
