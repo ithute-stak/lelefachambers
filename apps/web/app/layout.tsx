@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSite } from "@/lib/api";
 import "./globals.css";
+import "./brand.css";
 
 export const dynamic = "force-dynamic";
 
