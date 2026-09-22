@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Lelefa Chambers emblem</title>
+  <desc id="desc">Navy and gold legal emblem with column, scales, books and open book.</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#a86f1f"/><stop offset=".45" stop-color="#e2bb67"/><stop offset="1" stop-color="#b47c28"/></linearGradient>
+    <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#052845"/><stop offset="1" stop-color="#0a3a62"/></linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="32" fill="#fff"/>
+  <path d="M48 40h68v9H48zM53 52h58l-5 8H58z" fill="url(#gold)"/>
+  <path d="M60 64h43v101H60z" fill="url(#navy)"/>
+  <path d="M69 70h5v86h-5zm12 0h5v86h-5zm12 0h5v86h-5z" fill="url(#gold)"/>
+  <path d="M52 165h62v11H52z" fill="url(#navy)"/>
+  <path d="M48 179h72v12H48zm-5 15h81v13H43z" fill="url(#navy)"/>
+  <path d="M47 180h9v11h-9zm11 0h4v11h-4zm-13 15h9v12h-9zm11 0h4v12h-4z" fill="url(#gold)"/>
+  <path d="M111 68c22-18 67-20 88 5 10 12 16 28 16 47h-13c0-20-6-34-17-43-14-12-38-13-55-4-14 8-24 22-25 40-1 22 8 39 25 48 16 9 37 9 52 0 11-7 18-18 21-31h13c-3 20-13 36-29 46-22 14-54 14-75-1-20-14-31-36-30-62 1-19 8-34 19-45z" fill="url(#navy)"/>
+  <path d="M165 78v72" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M132 93h66" stroke="url(#gold)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M140 94l-11 32m58-32 11 32" stroke="#c89439" stroke-width="2.8"/>
+  <path d="M118 126h24c-2 13-21 13-24 0zm69 0h24c-2 13-21 13-24 0z" fill="url(#gold)"/>
+  <path d="M157 150h16l7 9h-30z" fill="url(#gold)"/>
+  <path d="M91 166c20 1 39 8 54 22 15-14 34-21 55-22l-9 30c-18-1-32 5-46 17-14-12-29-18-47-17z" fill="#fff" stroke="url(#gold)" stroke-width="4"/>
+  <path d="M145 188v25" stroke="#0a3153" stroke-width="3"/>
+</svg>

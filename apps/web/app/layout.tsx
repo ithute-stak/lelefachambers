@@ -3,18 +3,19 @@ import Link from "next/link";
 import { getSite } from "@/lib/api";
 import "./globals.css";
 import "./brand.css";
+import "./live-images.css";
 
 export const dynamic = "force-dynamic";
 
-const brandMark = "/brand/lelefa-chambers-mark.png";
-const brandLogo = "/brand/lelefa-chambers-logo.webp";
+const brandMark = "/brand/lelefa-chambers-mark.svg";
+const brandLogo = "/brand/lelefa-chambers-logo.svg";
 
 export const metadata: Metadata = {
   title: "Lelefa Chambers | Law for a Brighter Tomorrow",
   description: "Lelefa Chambers provides litigation, debt recovery, commercial, compliance and mediation services in Lesotho.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://lelefachambers.co.ls"),
   icons: {
-    icon: [{ url: brandMark, type: "image/png" }],
+    icon: [{ url: brandMark, type: "image/svg+xml" }],
     shortcut: brandMark,
     apple: brandMark
   },

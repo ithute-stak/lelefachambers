@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">Lelefa Chambers legal hero artwork</title>
+  <desc id="desc">Stylised Lesotho evening skyline with justice scales, legal books and a professional legal desk.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#02192d"/><stop offset=".55" stop-color="#0b3659"/><stop offset="1" stop-color="#10283d"/></linearGradient>
+    <linearGradient id="desk" x1="0" x2="1"><stop stop-color="#17100d"/><stop offset=".5" stop-color="#3a2315"/><stop offset="1" stop-color="#140c09"/></linearGradient>
+    <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#9e681c"/><stop offset=".48" stop-color="#f0cb72"/><stop offset="1" stop-color="#ad7420"/></linearGradient>
+    <radialGradient id="sun"><stop stop-color="#ffd980" stop-opacity=".9"/><stop offset="1" stop-color="#ffb335" stop-opacity="0"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="15" stdDeviation="12" flood-color="#000" flood-opacity=".45"/></filter>
+  </defs>
+  <rect width="1400" height="820" fill="url(#sky)"/>
+  <circle cx="1190" cy="118" r="125" fill="url(#sun)"/>
+  <path d="M0 402L120 315l90 53 115-97 112 73 146-139 165 130 105-72 124 105 123-136 220 174v166H0z" fill="#09233a"/>
+  <path d="M0 462l116-80 95 52 123-63 106 48 142-93 136 90 112-50 108 73 119-84 243 137v103H0z" fill="#061a2b" opacity=".93"/>
+  <g opacity=".9">
+    <rect x="150" y="387" width="52" height="104" fill="#0c3657"/><rect x="214" y="356" width="38" height="135" fill="#0a2f4c"/><rect x="268" y="402" width="58" height="89" fill="#0e3f66"/><rect x="338" y="369" width="44" height="122" fill="#0a3455"/><rect x="395" y="392" width="64" height="99" fill="#0e416a"/><rect x="476" y="344" width="49" height="147" fill="#0b3558"/><rect x="541" y="384" width="74" height="107" fill="#0d3d63"/>
+    <g fill="#e8b95a"><circle cx="169" cy="415" r="3"/><circle cx="184" cy="435" r="3"/><circle cx="231" cy="392" r="3"/><circle cx="292" cy="431" r="3"/><circle cx="360" cy="410" r="3"/><circle cx="418" cy="430" r="3"/><circle cx="498" cy="392" r="3"/><circle cx="573" cy="421" r="3"/></g>
+  </g>
+  <ellipse cx="935" cy="304" rx="255" ry="150" fill="#d2a547" opacity=".08" filter="url(#soft)"/>
+  <rect y="540" width="1400" height="280" fill="url(#desk)"/>
+  <path d="M0 566c320 24 650-18 1400 4v250H0z" fill="#23130d" opacity=".72"/>
+  <g transform="translate(830 120)" filter="url(#shadow)">
+    <path d="M188 36v338" stroke="url(#gold)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M70 94h236" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M92 96L47 224m238-128 45 128" stroke="#c99535" stroke-width="5"/>
+    <path d="M10 224h74c-4 47-66 47-74 0zm282 0h74c-4 47-66 47-74 0z" fill="url(#gold)"/>
+    <path d="M172 372h32l27 32h-86z" fill="url(#gold)"/>
+    <path d="M128 404h120" stroke="url(#gold)" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(1010 478)" filter="url(#shadow)">
+    <rect x="0" y="0" width="274" height="58" rx="4" fill="#061d31" stroke="#c18a30" stroke-width="2"/><rect x="14" y="69" width="274" height="58" rx="4" fill="#08243b" stroke="#c18a30" stroke-width="2"/><rect x="6" y="138" width="274" height="58" rx="4" fill="#061d31" stroke="#c18a30" stroke-width="2"/>
+    <text x="26" y="36" fill="#e4b85c" font-family="Georgia,serif" font-size="23" letter-spacing="5">JUSTICE</text><text x="40" y="105" fill="#e4b85c" font-family="Georgia,serif" font-size="23" letter-spacing="5">INTEGRITY</text><text x="45" y="174" fill="#e4b85c" font-family="Georgia,serif" font-size="23" letter-spacing="5">SERVICE</text>
+  </g>
+  <g transform="translate(610 595)" filter="url(#shadow)">
+    <rect x="0" y="0" width="290" height="68" rx="12" fill="#091d2c" stroke="#9c7131"/><rect x="24" y="17" width="240" height="4" rx="2" fill="#d5a64c" opacity=".65"/><path d="M45 68h220l30 25H18z" fill="#081723"/>
+  </g>
+</svg>
