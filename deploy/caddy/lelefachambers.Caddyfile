@@ -1,0 +1,32 @@
+# Lelefa Chambers routes for the shared VPS Caddy edge.
+# The Lelefa web and API services join the existing external Docker network
+# named `public-edge` and expose unique aliases on that network.
+
+www.lelefachambers.co.ls {
+    redir https://lelefachambers.co.ls{uri} permanent
+}
+
+lelefachambers.co.ls {
+    encode zstd gzip
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options SAMEORIGIN
+        Referrer-Policy strict-origin-when-cross-origin
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+
+    reverse_proxy lelefachambers-web:3000
+}
+
+api.lelefachambers.co.ls {
+    encode zstd gzip
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy no-referrer
+    }
+
+    reverse_proxy lelefachambers-api:8000
+}

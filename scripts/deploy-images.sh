@@ -30,6 +30,12 @@ compose() {
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
 }
 
+if ! docker network inspect public-edge >/dev/null 2>&1; then
+  echo "Required Docker network 'public-edge' does not exist." >&2
+  echo "The production Caddy edge proxy must provide this shared network before Lelefa Chambers is deployed." >&2
+  exit 1
+fi
+
 echo "==> Pulling published production images"
 compose pull api worker web
 
@@ -79,5 +85,7 @@ echo "Deployment complete."
 echo "Image tag: ${LELEFA_IMAGE_TAG:-latest}"
 echo "Local web: http://127.0.0.1:${LELEFA_WEB_HOST_PORT}"
 echo "Local API: http://127.0.0.1:${LELEFA_API_HOST_PORT}"
+echo "Caddy upstream web: lelefachambers-web:3000 on public-edge"
+echo "Caddy upstream API: lelefachambers-api:8000 on public-edge"
 echo "Public site: https://lelefachambers.co.ls"
 echo "API: https://api.lelefachambers.co.ls"
