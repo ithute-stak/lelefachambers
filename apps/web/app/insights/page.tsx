@@ -58,12 +58,10 @@ export default async function InsightsPage() {
                   </article>
                 ))}
               </div>
-              <div className="knowledge-note">
-                <div>
-                  <div className="eyebrow">Publishing workflow</div>
-                  <h3>Articles are published only after internal review and approval.</h3>
-                </div>
-                <p>The Chambers administration portal supports draft, review and publication controls. Until approved articles are available, this page presents the subject areas the knowledge centre is designed to cover rather than showing an empty screen.</p>
+              <div className="content-card" style={{marginTop: 22}}>
+                <div className="eyebrow">Publishing workflow</div>
+                <h2>Articles are published only after internal review and approval.</h2>
+                <p className="prose">The Chambers administration portal supports draft, review and publication controls. Until approved articles are available, this page presents the subject areas the knowledge centre is designed to cover rather than showing an empty screen.</p>
               </div>
             </>
           )}
