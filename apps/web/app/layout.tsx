@@ -54,6 +54,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <div className="topbar-group topbar-right">
               <span>Law for a Brighter Tomorrow</span>
               <Link href="/client-portal">Client Portal</Link>
+              <Link href="/chambers-admin">Staff Portal</Link>
             </div>
           </div>
         </div>
@@ -86,6 +87,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 <Link href="/institutional-recovery">Financial Institutions</Link>
                 <Link href="/insights">Insights</Link>
                 <Link href="/contact">Contact</Link>
+                <Link href="/chambers-admin">Staff Portal</Link>
                 <Link className="button" href="/contact">Request consultation</Link>
               </div>
             </details>
@@ -112,6 +114,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <Link href="/practice-areas">Practice Areas</Link>
               <Link href="/institutional-recovery">Financial Institutions</Link>
               <Link href="/client-portal">Client Portal</Link>
+              <Link href="/chambers-admin">Staff Portal</Link>
             </div>
             <div>
               <h3>Contact</h3>
