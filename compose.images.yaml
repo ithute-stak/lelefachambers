@@ -46,6 +46,11 @@ services:
       - legal_vault_data:/app/legal-vault
     ports:
       - "127.0.0.1:${LELEFA_API_HOST_PORT:-18080}:8000"
+    networks:
+      default: {}
+      public-edge:
+        aliases:
+          - lelefachambers-api
 
   worker:
     image: ghcr.io/ithute-stak/lelefachambers-api:${LELEFA_IMAGE_TAG:-latest}
@@ -67,6 +72,8 @@ services:
         condition: service_healthy
     volumes:
       - legal_vault_data:/app/legal-vault
+    healthcheck:
+      disable: true
 
   web:
     image: ghcr.io/ithute-stak/lelefachambers-web:${LELEFA_IMAGE_TAG:-latest}
@@ -81,9 +88,19 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:${LELEFA_WEB_HOST_PORT:-13000}:3000"
+    networks:
+      default: {}
+      public-edge:
+        aliases:
+          - lelefachambers-web
 
 volumes:
   postgres_data:
   redis_data:
   uploads_data:
   legal_vault_data:
+
+networks:
+  public-edge:
+    external: true
+    name: public-edge
