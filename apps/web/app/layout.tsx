@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 const brandMark = "/brand/lelefa-chambers-mark.svg";
 const brandLogo = "/brand/lelefa-chambers-logo.svg";
+const developerMark = "/brand/ithute-digital-solutions-mark.svg";
 
 export const metadata: Metadata = {
   title: "Lelefa Chambers | Law for a Brighter Tomorrow",
@@ -123,6 +124,17 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <div className="shell footer-bottom">
             <span>© {new Date().getFullYear()} Lelefa Chambers. All rights reserved.</span>
             <span>Legal information on this website is general and does not create a lawyer-client relationship.</span>
+            <a
+              className="developer-credit"
+              href="https://ithute.co.ls"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Website designed and developed by Ithute Digital Solutions"
+            >
+              <span className="developer-credit-label">Designed &amp; developed by</span>
+              <img src={developerMark} alt="" aria-hidden="true" />
+              <strong>Ithute Digital Solutions</strong>
+            </a>
           </div>
         </footer>
 
