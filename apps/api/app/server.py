@@ -5,6 +5,7 @@ from app.main import app
 from app.operations import router as operations_router
 from app.recovery import router as recovery_router
 from app.automation import pay_config, router as automation_router
+from app.production import router as production_router
 
 
 @app.middleware("http")
@@ -30,5 +31,6 @@ async def require_ithute_pay_configuration(request: Request, call_next):
 app.include_router(operations_router)
 app.include_router(recovery_router)
 app.include_router(automation_router)
+app.include_router(production_router)
 
 __all__ = ["app"]

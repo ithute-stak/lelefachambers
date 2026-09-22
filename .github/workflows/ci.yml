@@ -9,6 +9,7 @@ on:
       - feature/chambers-operations-phase-2
       - feature/legal-recovery-phase-3
       - feature/recovery-automation-phase-4
+      - feature/production-hardening-phase-5
 
 jobs:
   api:
@@ -21,7 +22,7 @@ jobs:
           cache: pip
           cache-dependency-path: apps/api/requirements.txt
       - run: pip install -r apps/api/requirements.txt
-      - run: python -m compileall apps/api/app apps/api/tests
+      - run: python -m compileall apps/api/app apps/api/tests apps/api/alembic
       - run: python -c "import sys; sys.path.insert(0, 'apps/api'); import app.server; import app.worker; print('Combined API and worker import OK')"
         env:
           DATABASE_URL: "sqlite+pysqlite:///:memory:"
@@ -37,6 +38,22 @@ jobs:
         env:
           PYTHONPATH: "."
           DATABASE_URL: "sqlite+pysqlite:///:memory:"
+          JWT_SECRET: "ci-secret-only"
+          BOOTSTRAP_ADMIN_PASSWORD: "ci-admin-password"
+          LELEFA_DEBT_COLLECTORS_API_KEY: "ci-integration-key"
+          LEGAL_VAULT_DIR: "/tmp/lelefa-chambers-ci-vault"
+          ITHUTE_PAY_ENABLED: "false"
+          ITHUTE_PAY_API_KEY: "ipb_test_ci-placeholder"
+          ITHUTE_PAY_WEBHOOK_SECRET: "ci-webhook-secret"
+      - name: Validate Alembic baseline on a fresh database
+        working-directory: apps/api
+        run: |
+          rm -f ci-alembic.db
+          alembic upgrade head
+          alembic current | grep -q 0001_baseline
+        env:
+          PYTHONPATH: "."
+          DATABASE_URL: "sqlite+pysqlite:///./ci-alembic.db"
           JWT_SECRET: "ci-secret-only"
           BOOTSTRAP_ADMIN_PASSWORD: "ci-admin-password"
           LELEFA_DEBT_COLLECTORS_API_KEY: "ci-integration-key"
@@ -69,4 +86,4 @@ jobs:
       - run: sed -i 's/CHANGE_THIS_DATABASE_PASSWORD/ci-db-password/g; s/CHANGE_THIS_LONG_RANDOM_SECRET/ci-jwt-secret/g; s/CHANGE_THIS_ADMIN_PASSWORD/ci-admin-password/g; s/CHANGE_THIS_DEBT_COLLECTORS_INTEGRATION_KEY/ci-integration-key/g; s/CHANGE_THIS_ITHUTE_PAY_APPLICATION_KEY/ipb_test_ci-placeholder/g; s/CHANGE_THIS_ITHUTE_PAY_WEBHOOK_SECRET/ci-webhook-secret/g' .env
       - run: docker compose config >/dev/null
       - run: docker compose config --services | grep -qx worker
-      - run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh
+      - run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh scripts/verify-production.sh
