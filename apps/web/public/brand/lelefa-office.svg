@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Lelefa Chambers reception</title>
+  <desc id="desc">Elegant navy, cream and gold legal office reception with mountain views and Lelefa Chambers branding.</desc>
+  <defs>
+    <linearGradient id="wall" x1="0" x2="1"><stop stop-color="#efe8dc"/><stop offset="1" stop-color="#fbf8f2"/></linearGradient>
+    <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#052846"/><stop offset="1" stop-color="#0a3a61"/></linearGradient>
+    <linearGradient id="gold" x1="0" x2="1"><stop stop-color="#a46c1d"/><stop offset=".5" stop-color="#e4ba61"/><stop offset="1" stop-color="#b77d26"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#09243b" flood-opacity=".18"/></filter>
+  </defs>
+  <rect width="1200" height="720" fill="url(#wall)"/>
+  <rect width="430" height="720" fill="#e4ddd1"/>
+  <rect x="35" y="45" width="340" height="410" rx="10" fill="#dbe7ec"/>
+  <path d="M35 324l82-83 66 45 77-75 115 103v141H35z" fill="#9eb4bd"/>
+  <path d="M35 360l94-61 64 42 91-58 91 72v100H35z" fill="#6f8b98"/>
+  <rect x="78" y="486" width="295" height="118" rx="28" fill="url(#navy)"/>
+  <rect x="39" y="529" width="105" height="78" rx="20" fill="url(#navy)"/>
+  <ellipse cx="215" cy="625" rx="124" ry="29" fill="#d7c8ac"/>
+  <ellipse cx="215" cy="619" rx="92" ry="18" fill="#fbf8f2" stroke="#c79a45" stroke-width="4"/>
+  <rect x="515" y="102" width="590" height="240" rx="8" fill="#f4eee4"/>
+  <path d="M515 102h590v240H515z" fill="none" stroke="#dec7a0" stroke-width="3"/>
+  <text x="624" y="187" fill="#082f50" font-family="Georgia,serif" font-size="50" letter-spacing="3">LELEFA CHAMBERS</text>
+  <path d="M628 209h360" stroke="url(#gold)" stroke-width="3"/>
+  <text x="652" y="251" fill="#a97622" font-family="Arial,sans-serif" font-size="19" letter-spacing="7">LAW FOR A BRIGHTER TOMORROW</text>
+  <g transform="translate(755 282)">
+    <path d="M74 0v78M20 18h108" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M34 20L15 61m99-41 19 41" stroke="#bd8730" stroke-width="3"/>
+    <path d="M0 61h30c-2 18-26 18-30 0zm118 0h30c-2 18-26 18-30 0z" fill="url(#gold)"/>
+    <path d="M62 78h24l12 13H50z" fill="url(#gold)"/>
+  </g>
+  <g filter="url(#shadow)">
+    <path d="M495 444h620l54 155H455z" fill="#f4efe7" stroke="#d3c8b6" stroke-width="3"/>
+    <path d="M605 468h380l34 108H570z" fill="#0b1e2d"/>
+    <path d="M628 472h332l18 16H611z" fill="#1d3446"/>
+  </g>
+  <g transform="translate(1032 336)">
+    <rect x="40" y="0" width="10" height="114" fill="#78613b"/>
+    <path d="M45 7c-58 18-74 74-37 92 32-18 49-57 37-92zm8 14c49 7 72 45 53 78-36-7-57-43-53-78z" fill="#315b42"/>
+    <ellipse cx="47" cy="127" rx="52" ry="24" fill="#152f29"/><rect x="8" y="105" width="78" height="35" rx="7" fill="#132a25" stroke="#c3923c"/>
+  </g>
+  <g transform="translate(466 382)" fill="#a46f21" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="4">
+    <text y="0">PEOPLE</text><text y="39">BUSINESS</text><text y="78">INSTITUTIONS</text><text y="117">COMMUNITIES</text>
+  </g>
+  <g transform="translate(72 80)">
+    <rect width="120" height="154" fill="#fff" stroke="#cba563" stroke-width="3"/>
+    <path d="M18 120L55 77l29 24 18-36 18 55z" fill="#6e8794"/>
+    <circle cx="90" cy="46" r="16" fill="#deb256"/>
+  </g>
+</svg>
