@@ -10,6 +10,7 @@ on:
       - feature/legal-recovery-phase-3
       - feature/recovery-automation-phase-4
       - feature/production-hardening-phase-5
+      - feature/production-edge-routing
 
 jobs:
   api:
@@ -84,6 +85,17 @@ jobs:
       - uses: actions/checkout@v4
       - run: cp .env.example .env
       - run: sed -i 's/CHANGE_THIS_DATABASE_PASSWORD/ci-db-password/g; s/CHANGE_THIS_LONG_RANDOM_SECRET/ci-jwt-secret/g; s/CHANGE_THIS_ADMIN_PASSWORD/ci-admin-password/g; s/CHANGE_THIS_DEBT_COLLECTORS_INTEGRATION_KEY/ci-integration-key/g; s/CHANGE_THIS_ITHUTE_PAY_APPLICATION_KEY/ipb_test_ci-placeholder/g; s/CHANGE_THIS_ITHUTE_PAY_WEBHOOK_SECRET/ci-webhook-secret/g' .env
-      - run: docker compose config >/dev/null
+      - run: docker compose config >/tmp/compose.txt
       - run: docker compose config --services | grep -qx worker
-      - run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh scripts/verify-production.sh
+      - name: Confirm web and API are loopback-only
+        run: |
+          grep -q '127.0.0.1' /tmp/compose.txt
+          grep -q 'target: 3000' /tmp/compose.txt
+          grep -q 'target: 8000' /tmp/compose.txt
+      - name: Validate operations and edge scripts
+        run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh scripts/verify-production.sh scripts/prepare-nginx-host.sh scripts/issue-letsencrypt.sh scripts/check-production-dns.sh
+      - name: Validate production domain templates
+        run: |
+          grep -q 'lelefachambers.co.ls' deploy/nginx/lelefachambers-bootstrap.conf
+          grep -q 'api.lelefachambers.co.ls' deploy/nginx/lelefachambers-production.conf
+          grep -q 'NEXT_PUBLIC_API_URL=https://api.lelefachambers.co.ls' .env.production.example
