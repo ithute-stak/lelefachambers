@@ -7,6 +7,7 @@ on:
       - main
       - feature/dynamic-cms-foundation
       - feature/chambers-operations-phase-2
+      - feature/legal-recovery-phase-3
 
 jobs:
   api:
@@ -26,6 +27,7 @@ jobs:
           JWT_SECRET: "ci-secret-only"
           BOOTSTRAP_ADMIN_PASSWORD: "ci-admin-password"
           LELEFA_DEBT_COLLECTORS_API_KEY: "ci-integration-key"
+          LEGAL_VAULT_DIR: "/tmp/lelefa-chambers-ci-vault"
       - working-directory: apps/api
         run: pytest -q
         env:
@@ -34,6 +36,7 @@ jobs:
           JWT_SECRET: "ci-secret-only"
           BOOTSTRAP_ADMIN_PASSWORD: "ci-admin-password"
           LELEFA_DEBT_COLLECTORS_API_KEY: "ci-integration-key"
+          LEGAL_VAULT_DIR: "/tmp/lelefa-chambers-ci-vault"
 
   web:
     runs-on: ubuntu-latest
@@ -58,4 +61,4 @@ jobs:
       - run: cp .env.example .env
       - run: sed -i 's/CHANGE_THIS_DATABASE_PASSWORD/ci-db-password/g; s/CHANGE_THIS_LONG_RANDOM_SECRET/ci-jwt-secret/g; s/CHANGE_THIS_ADMIN_PASSWORD/ci-admin-password/g; s/CHANGE_THIS_DEBT_COLLECTORS_INTEGRATION_KEY/ci-integration-key/g' .env
       - run: docker compose config >/dev/null
-      - run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh
+      - run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh

@@ -8,6 +8,7 @@ export default function ChambersAdminLayout({ children }: { children: React.Reac
           <span style={{color:"#cda461",textTransform:"uppercase",letterSpacing:1.2,fontSize:11}}>Chambers Administration</span>
           <Link href="/chambers-admin">Website CMS</Link>
           <Link href="/chambers-admin/operations">Legal Operations</Link>
+          <Link href="/chambers-admin/recovery">Recovery & Client Portal</Link>
           <Link href="/" style={{marginLeft:"auto",opacity:.75}}>Public website</Link>
         </div>
       </div>
