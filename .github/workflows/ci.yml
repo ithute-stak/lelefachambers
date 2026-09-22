@@ -11,6 +11,7 @@ on:
       - feature/recovery-automation-phase-4
       - feature/production-hardening-phase-5
       - feature/production-edge-routing
+      - feature/production-image-release
 
 jobs:
   api:
@@ -92,10 +93,18 @@ jobs:
           grep -q '127.0.0.1' /tmp/compose.txt
           grep -q 'target: 3000' /tmp/compose.txt
           grep -q 'target: 8000' /tmp/compose.txt
-      - name: Validate operations and edge scripts
-        run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh scripts/verify-production.sh scripts/prepare-nginx-host.sh scripts/issue-letsencrypt.sh scripts/check-production-dns.sh
-      - name: Validate production domain templates
+      - name: Validate image-only production Compose stack
+        run: |
+          docker compose -f compose.images.yaml config >/tmp/compose-images.txt
+          grep -q 'ghcr.io/ithute-stak/lelefachambers-api:latest' /tmp/compose-images.txt
+          grep -q 'ghcr.io/ithute-stak/lelefachambers-web:latest' /tmp/compose-images.txt
+          grep -q '127.0.0.1' /tmp/compose-images.txt
+      - name: Validate operations, edge and image deployment scripts
+        run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh scripts/verify-production.sh scripts/prepare-nginx-host.sh scripts/issue-letsencrypt.sh scripts/check-production-dns.sh scripts/deploy-images.sh
+      - name: Validate production domain and image templates
         run: |
           grep -q 'lelefachambers.co.ls' deploy/nginx/lelefachambers-bootstrap.conf
           grep -q 'api.lelefachambers.co.ls' deploy/nginx/lelefachambers-production.conf
           grep -q 'NEXT_PUBLIC_API_URL=https://api.lelefachambers.co.ls' .env.production.example
+          grep -q 'LELEFA_IMAGE_TAG=latest' .env.production.example
+          grep -q 'packages: write' .github/workflows/publish-images.yml
