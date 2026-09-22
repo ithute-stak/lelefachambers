@@ -21,18 +21,26 @@ It now includes:
 - a private legal-document vault;
 - settlements, judgments and execution tracking;
 - recovery-payment matching and remittance status;
+- settlement installment schedules and automatic allocation;
+- broken-arrangement / overdue detection;
+- court, task, installment and credential reminder scanning;
+- a Redis-backed recovery automation worker;
+- server-to-server Ithute Pay payment collection integration;
+- signed Ithute Pay webhook processing and idempotent event capture;
 - an institutional client portal;
 - role-based access and audit history;
 - PostgreSQL and legal-vault backup utilities.
 
 ## Architecture
 
-- `apps/web` — Next.js public website, Chambers CMS, legal operations, recovery workspace and institutional client portal
-- `apps/api` — FastAPI API, PostgreSQL domain model, authentication, RBAC, recovery ledger and audit trail
-- PostgreSQL — website, professional, client, matter, recovery and portal records
-- Redis — cache/job/realtime foundation for upcoming reminder and notification workers
+- `apps/web` — Next.js public website, Chambers CMS, legal operations, recovery, automation workspace and institutional client portal
+- `apps/api` — FastAPI API, PostgreSQL domain model, authentication, RBAC, recovery ledger, automation and audit trail
+- PostgreSQL — website, professional, client, matter, recovery, schedule, payment and portal records
+- Redis — recovery reminder stream and job/realtime foundation
+- `worker` — periodic recovery-control scanner and automatic payment allocator
 - public media volume — CMS images/PDFs
 - private legal-vault volume — authenticated matter documents only
+- Ithute Pay — central provider/payment boundary for approved collections; Lelefa Chambers keeps business references and recovery allocations, not provider credentials
 - Docker Compose — local and deployment-oriented orchestration
 
 ```text
@@ -40,24 +48,29 @@ lelefachambers.co.ls
         |
         v
       Next.js
-   +----+---------------------------+
-   |        |            |          |
- Public    CMS      Legal Ops   Client Portal
+   +----+-------------------------------+
+   |        |            |              |
+ Public    CMS      Legal Ops      Client Portal
  Website             Recovery
-   |        |            |          |
-   +--------+-----+------+----------+
+                     Automation
+   |        |            |              |
+   +--------+-----+------+--------------+
                   |
                   v
                FastAPI
                   |
-       +----------+----------+
-       |                     |
-   PostgreSQL              Redis
-       |
- Legal clients / matters / settlements /
- judgments / payments / portal access
+       +----------+-----------+
+       |                      |
+   PostgreSQL                Redis
+       |                      |
+ Legal clients / matters   Reminder stream
+ settlements / schedules       |
+ judgments / payments          v
+ portal access               Worker
        |
  Private Legal Document Vault
+       |
+       +---- server-to-server ----> Ithute Pay ----> approved providers
 ```
 
 ## Phase 1 — Dynamic website and CMS
@@ -105,17 +118,30 @@ lelefachambers.co.ls
 
 `/client-portal`
 
-Authorised institutional clients can view only their organisation's matters, including:
+Authorised institutional clients can view only their organisation's matters, including matter stage/status, client-visible documents, settlements, judgments, execution activity, matched recovery payments and recorded recovery totals. Private Chambers notes and internal-only documents are not returned through client-portal endpoints.
 
-- matter stage/status;
-- client-visible documents;
-- settlements;
-- judgments;
-- execution activity;
-- matched recovery payments;
-- recorded recovery totals.
+## Phase 4 — Recovery automation and Ithute Pay
 
-Private Chambers notes and internal-only documents are not returned through client-portal endpoints.
+`/chambers-admin/automation`
+
+- settlement installment schedule generation;
+- scheduled/due/partial/paid/overdue installment states;
+- automatic allocation of matched settlement payments to the oldest unpaid installment;
+- automated detection of overdue/defaulted settlement arrangements;
+- reminder centre for court dates, legal tasks, settlement dues and professional credential expiry;
+- manual automation scan for authorised staff;
+- Ithute Pay payment-request creation and status refresh;
+- signed webhook ingestion from Ithute Pay;
+- idempotent Ithute Pay event processing;
+- successful Ithute Pay collections converted into Chambers recovery records and allocations.
+
+The Docker `worker` scans recovery state periodically and publishes new reminder events to Redis. PostgreSQL remains the reminder source of truth so a Redis outage does not discard reminders.
+
+### Ithute Pay boundary
+
+Lelefa Chambers is a **consumer** of Ithute Pay. Provider credentials and provider-specific payment logic remain inside Ithute Pay. Chambers uses a dedicated application API key, stable idempotency keys, optional HMAC request signing and signed webhooks.
+
+`ITHUTE_PAY_ENABLED=false` is the safe default. Activation requires a dedicated Chambers test/live application, webhook signing secret and the appropriate provider approval/certification in Ithute Pay.
 
 ## Local development
 
@@ -139,6 +165,7 @@ docker compose up -d --build
 - Chambers CMS: `http://localhost:3000/chambers-admin`
 - Legal Operations: `http://localhost:3000/chambers-admin/operations`
 - Recovery Workspace: `http://localhost:3000/chambers-admin/recovery`
+- Automation & Ithute Pay: `http://localhost:3000/chambers-admin/automation`
 - Institutional Client Portal: `http://localhost:3000/client-portal`
 - API docs: `http://localhost:8000/docs`
 - API health: `http://localhost:8000/health`
@@ -148,8 +175,6 @@ The first API startup creates the schema, seeds initial public Chambers content 
 ## Lelefa Debt Collectors integration
 
 The recovery referral bridge is disabled until `LELEFA_DEBT_COLLECTORS_API_KEY` is configured with a strong production secret.
-
-A referral follows this pattern:
 
 ```text
 Lelefa Debt Collectors
@@ -175,6 +200,35 @@ Client + legal matter created
 
 The source collection system remains authoritative for creditor/source balances unless a future integration contract explicitly changes that responsibility.
 
+## Recovery payment flow
+
+```text
+Matter / Settlement
+       |
+       v
+Installment Schedule
+       |
+       v
+Payment Request ----> Ithute Pay ----> M-Pesa / EcoCash / approved providers
+       |                    |
+       |              signed event / status
+       +--------------------+
+                 |
+                 v
+          Recovery Payment
+                 |
+                 v
+        Automatic Allocation
+                 |
+                 v
+ Settlement / Matter Update
+                 |
+                 v
+      Institutional Client Portal
+```
+
+Only a terminal successful Ithute Pay state is converted into a matched recovery. A timeout, `processing` or `unknown` state is not treated as a successful payment.
+
 ## Backups
 
 PostgreSQL:
@@ -195,10 +249,10 @@ Both generate SHA-256 checksum files. Production backups should be copied off-se
 
 Pull requests validate:
 
-- Python API compile/import;
-- pytest model/route/role tests;
+- Python API and worker compile/import;
+- pytest model/route/role/schedule/webhook tests;
 - Next.js production build;
-- Docker Compose configuration;
+- Docker Compose configuration, including the automation worker;
 - PostgreSQL backup/restore script syntax;
 - private legal-vault backup script syntax.
 
@@ -211,20 +265,20 @@ Pull requests validate:
 - private document download requires authenticated API authorization;
 - authorization is enforced on the API, not only hidden in the UI;
 - client-portal users are scoped to one institutional client record;
-- provider/payment credentials remain in their owning service;
+- Ithute Pay application/provider credentials remain server-side and are never exposed to the browser;
+- successful payment ingestion is deduplicated by the Ithute Pay public resource ID;
 - production document handling should add malware scanning, encrypted off-server storage, formal retention controls and tested disaster recovery.
 
 ## Next work
 
-The strongest next phase is:
+The strongest remaining platform-hardening work is:
 
 - Alembic migration baseline and versioned schema changes;
-- settlement installment schedules and broken-arrangement automation;
-- Redis-backed reminders for court dates, settlement dues and credential expiry;
-- Ithute Pay recovery/reconciliation integration;
-- richer client statements and downloadable institutional reports;
-- private object storage with malware scanning and encryption;
+- connect reminder events to Ithute Push/email/SMS policies;
+- downloadable institutional recovery statements and management reports;
+- private encrypted object storage with malware scanning;
 - end-to-end browser tests;
-- monitored production deployment to `lelefachambers.co.ls`.
+- monitored production deployment to `lelefachambers.co.ls`;
+- sandbox certification of the Lelefa Chambers Ithute Pay application before any live payment activation.
 
-See `docs/LEGAL_OPERATIONS.md` and `docs/LEGAL_RECOVERY_PHASE_3.md` for the detailed operating model.
+See `docs/LEGAL_OPERATIONS.md`, `docs/LEGAL_RECOVERY_PHASE_3.md` and `docs/RECOVERY_AUTOMATION_PHASE_4.md` for the detailed operating model.
