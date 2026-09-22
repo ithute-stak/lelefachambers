@@ -25,6 +25,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <div className="shell topbar-inner">
             <span>Maseru, Lesotho</span>
             <div className="topbar-links">
+              <Link href="/client-portal">Institutional Client Portal</Link>
               <a href={`tel:${String(contact.phone || "").replace(/\s/g, "")}`}>{contact.phone || "+266 5776 3829"}</a>
               <a href={`mailto:${contact.email || "info@lelefachambers.co.ls"}`}>{contact.email || "info@lelefachambers.co.ls"}</a>
             </div>
@@ -70,6 +71,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <Link href="/about">About</Link>
               <Link href="/our-team">Our Team</Link>
               <Link href="/contact">Contact</Link>
+              <Link href="/client-portal">Institutional Client Portal</Link>
             </div>
             <div>
               <h3>Contact</h3>
