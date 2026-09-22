@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getSite } from "@/lib/api";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Lelefa Chambers | Legal Strategy. Litigation. Recovery.",
   description: "Lelefa Chambers provides litigation, debt recovery, commercial, compliance and mediation services in Lesotho.",
