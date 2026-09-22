@@ -40,23 +40,12 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="hero-visual" aria-hidden="true">
-            <div className="mountain mountain-one" />
-            <div className="mountain mountain-two" />
-            <div className="justice-card">
-              <img src="/brand/lelefa-chambers-mark.png" alt="" />
-              <div className="scales-art">
-                <span className="scale-beam" />
-                <span className="scale-left" />
-                <span className="scale-right" />
-              </div>
+          <div className="hero-visual hero-visual-photo">
+            <img className="hero-photo" src="/brand/lelefa-hero.svg" alt="Justice scales, law books and a Lesotho-inspired skyline" />
+            <div className="hero-quote-card">
+              <img src="/brand/lelefa-chambers-mark.svg" alt="Lelefa Chambers emblem" />
               <blockquote>“Law for a brighter tomorrow.”</blockquote>
               <small>Lelefa Chambers</small>
-            </div>
-            <div className="law-books">
-              <span>JUSTICE</span>
-              <span>INTEGRITY</span>
-              <span>SERVICE</span>
             </div>
           </div>
         </div>
@@ -105,10 +94,11 @@ export default async function HomePage() {
 
       <section className="section about-premium">
         <div className="shell about-grid">
-          <div className="about-visual">
-            <div className="about-office-lines" />
-            <img src="/brand/lelefa-chambers-logo.webp" alt="Lelefa Chambers" />
-            <span>Law for a Brighter Tomorrow</span>
+          <div className="about-visual about-visual-photo">
+            <img className="about-photo" src="/brand/lelefa-office.svg" alt="Lelefa Chambers reception and consultation environment" />
+            <div className="about-logo-badge">
+              <img src="/brand/lelefa-chambers-logo.svg" alt="Lelefa Chambers — Law for a Brighter Tomorrow" />
+            </div>
           </div>
           <div className="about-copy">
             <div className="eyebrow">About Lelefa Chambers</div>
