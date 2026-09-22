@@ -17,7 +17,14 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
   exit 1
 fi
 
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
+
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-lelefachambers}"
+LELEFA_API_HOST_PORT="${LELEFA_API_HOST_PORT:-18080}"
+LELEFA_WEB_HOST_PORT="${LELEFA_WEB_HOST_PORT:-13000}"
 
 compose() {
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
@@ -47,28 +54,30 @@ compose up -d --remove-orphans api worker web
 echo "==> Current services"
 compose ps
 
-echo "==> Waiting for API liveness"
+echo "==> Waiting for API liveness on 127.0.0.1:${LELEFA_API_HOST_PORT}"
 for _ in $(seq 1 60); do
-  if curl --fail --silent http://127.0.0.1:8000/health/live >/dev/null 2>&1; then
+  if curl --fail --silent "http://127.0.0.1:${LELEFA_API_HOST_PORT}/health/live" >/dev/null 2>&1; then
     break
   fi
   sleep 2
 done
-curl --fail --silent http://127.0.0.1:8000/health/live >/dev/null
+curl --fail --silent "http://127.0.0.1:${LELEFA_API_HOST_PORT}/health/live" >/dev/null
 
 echo "==> Waiting for API readiness"
-curl --fail --silent http://127.0.0.1:8000/health/ready >/dev/null
+curl --fail --silent "http://127.0.0.1:${LELEFA_API_HOST_PORT}/health/ready" >/dev/null
 
-echo "==> Waiting for Next.js"
+echo "==> Waiting for Next.js on 127.0.0.1:${LELEFA_WEB_HOST_PORT}"
 for _ in $(seq 1 60); do
-  if curl --fail --silent http://127.0.0.1:3000/ >/dev/null 2>&1; then
+  if curl --fail --silent "http://127.0.0.1:${LELEFA_WEB_HOST_PORT}/" >/dev/null 2>&1; then
     break
   fi
   sleep 2
 done
-curl --fail --silent http://127.0.0.1:3000/ >/dev/null
+curl --fail --silent "http://127.0.0.1:${LELEFA_WEB_HOST_PORT}/" >/dev/null
 
 echo "Deployment complete."
 echo "Image tag: ${LELEFA_IMAGE_TAG:-latest}"
+echo "Local web: http://127.0.0.1:${LELEFA_WEB_HOST_PORT}"
+echo "Local API: http://127.0.0.1:${LELEFA_API_HOST_PORT}"
 echo "Public site: https://lelefachambers.co.ls"
 echo "API: https://api.lelefachambers.co.ls"

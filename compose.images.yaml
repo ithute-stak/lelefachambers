@@ -45,7 +45,7 @@ services:
       - uploads_data:/app/uploads
       - legal_vault_data:/app/legal-vault
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${LELEFA_API_HOST_PORT:-18080}:8000"
 
   worker:
     image: ghcr.io/ithute-stak/lelefachambers-api:${LELEFA_IMAGE_TAG:-latest}
@@ -80,7 +80,7 @@ services:
       api:
         condition: service_healthy
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:${LELEFA_WEB_HOST_PORT:-13000}:3000"
 
 volumes:
   postgres_data:
