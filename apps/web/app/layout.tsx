@@ -10,7 +10,7 @@ const brandMark = "/brand/lelefa-chambers-mark.png";
 const brandLogo = "/brand/lelefa-chambers-logo.webp";
 
 export const metadata: Metadata = {
-  title: "Lelefa Chambers | Legal Strategy. Litigation. Recovery.",
+  title: "Lelefa Chambers | Law for a Brighter Tomorrow",
   description: "Lelefa Chambers provides litigation, debt recovery, commercial, compliance and mediation services in Lesotho.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://lelefachambers.co.ls"),
   icons: {
@@ -19,16 +19,16 @@ export const metadata: Metadata = {
     apple: brandMark
   },
   openGraph: {
-    title: "Lelefa Chambers | Legal Strategy. Litigation. Recovery.",
-    description: "Lelefa Chambers provides litigation, debt recovery, commercial, compliance and mediation services in Lesotho.",
+    title: "Lelefa Chambers | Law for a Brighter Tomorrow",
+    description: "Trusted legal strategy, litigation and recovery services in Lesotho.",
     type: "website",
     siteName: "Lelefa Chambers",
     images: [{ url: brandLogo, alt: "Lelefa Chambers" }]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lelefa Chambers | Legal Strategy. Litigation. Recovery.",
-    description: "Legal strategy, litigation and recovery services in Lesotho.",
+    title: "Lelefa Chambers | Law for a Brighter Tomorrow",
+    description: "Trusted legal strategy, litigation and recovery services in Lesotho.",
     images: [brandLogo]
   }
 };
@@ -36,72 +36,87 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const site = await getSite();
   const contact = site.settings.contact || {};
-  const pages = site.pages
-    .filter((page) => page.show_in_navigation && page.slug !== "home")
-    .sort((a, b) => a.sort_order - b.sort_order);
+  const phone = contact.phone || "+266 5776 3829";
+  const email = contact.email || "info@lelefachambers.co.ls";
 
   return (
     <html lang="en">
       <body>
         <div className="topbar">
           <div className="shell topbar-inner">
-            <span>Maseru, Lesotho</span>
-            <div className="topbar-links">
-              <Link href="/client-portal">Institutional Client Portal</Link>
-              <a href={`tel:${String(contact.phone || "").replace(/\s/g, "")}`}>{contact.phone || "+266 5776 3829"}</a>
-              <a href={`mailto:${contact.email || "info@lelefachambers.co.ls"}`}>{contact.email || "info@lelefachambers.co.ls"}</a>
+            <div className="topbar-group">
+              <span>● Maseru, Lesotho</span>
+              <a href={`tel:${String(phone).replace(/\s/g, "")}`}>☎ {phone}</a>
+              <a href={`mailto:${email}`}>✉ {email}</a>
+            </div>
+            <div className="topbar-group topbar-right">
+              <span>Law for a Brighter Tomorrow</span>
+              <Link href="/client-portal">Client Portal</Link>
             </div>
           </div>
         </div>
+
         <header className="site-header">
           <div className="shell nav-shell">
             <Link className="brand" href="/" aria-label="Lelefa Chambers home">
-              <img className="brand-mark-image" src={brandMark} alt="" width={54} height={54} />
-              <span className="brand-copy">
-                <strong>Lelefa Chambers</strong>
-                <small>Advocates • Lesotho</small>
-              </span>
+              <img className="header-logo" src={brandLogo} alt="Lelefa Chambers" />
             </Link>
+
             <nav className="nav-links" aria-label="Primary navigation">
               <Link href="/">Home</Link>
+              <Link href="/about">About</Link>
               <Link href="/practice-areas">Practice Areas</Link>
               <Link href="/our-team">Our Team</Link>
-              {pages.filter((page) => !["about", "contact"].includes(page.slug)).map((page) => (
-                <Link href={`/${page.slug}`} key={page.slug}>{page.nav_label || page.title}</Link>
-              ))}
+              <Link href="/institutional-recovery">Financial Institutions</Link>
               <Link href="/insights">Insights</Link>
-              <Link href="/about">About</Link>
+              <Link href="/contact">Contact</Link>
             </nav>
-            <Link className="button button-small" href="/contact">Request consultation</Link>
+
+            <Link className="button button-small nav-cta" href="/contact">Request consultation <span>→</span></Link>
+
+            <details className="mobile-menu">
+              <summary aria-label="Open navigation"><span></span><span></span><span></span></summary>
+              <div className="mobile-menu-panel">
+                <Link href="/">Home</Link>
+                <Link href="/about">About</Link>
+                <Link href="/practice-areas">Practice Areas</Link>
+                <Link href="/our-team">Our Team</Link>
+                <Link href="/institutional-recovery">Financial Institutions</Link>
+                <Link href="/insights">Insights</Link>
+                <Link href="/contact">Contact</Link>
+                <Link className="button" href="/contact">Request consultation</Link>
+              </div>
+            </details>
           </div>
         </header>
+
         <main>{children}</main>
+
         <footer className="footer">
           <div className="shell footer-grid">
+            <div className="footer-intro">
+              <img className="footer-logo" src={brandLogo} alt="Lelefa Chambers — Law for a brighter tomorrow" />
+              <p>Professional legal representation, dispute resolution and controlled legal-recovery services for individuals, businesses and institutions in Lesotho.</p>
+            </div>
             <div>
-              <div className="footer-logo-wrap">
-                <img className="footer-logo" src={brandLogo} alt="Lelefa Chambers — Law for a brighter tomorrow" />
-              </div>
-              <p>Professional legal representation, dispute resolution and controlled legal-recovery services in Lesotho.</p>
+              <h3>Quick links</h3>
+              <Link href="/">Home</Link>
+              <Link href="/about">About Us</Link>
+              <Link href="/our-team">Our Team</Link>
+              <Link href="/insights">Insights</Link>
             </div>
             <div>
               <h3>Practice</h3>
               <Link href="/practice-areas">Practice Areas</Link>
               <Link href="/institutional-recovery">Financial Institutions</Link>
-              <Link href="/insights">Legal Insights</Link>
-            </div>
-            <div>
-              <h3>Chambers</h3>
-              <Link href="/about">About</Link>
-              <Link href="/our-team">Our Team</Link>
-              <Link href="/contact">Contact</Link>
-              <Link href="/client-portal">Institutional Client Portal</Link>
+              <Link href="/client-portal">Client Portal</Link>
             </div>
             <div>
               <h3>Contact</h3>
-              <a href={`mailto:${contact.email || "info@lelefachambers.co.ls"}`}>{contact.email || "info@lelefachambers.co.ls"}</a>
-              <a href={`tel:${String(contact.phone || "+266 5776 3829").replace(/\s/g, "")}`}>{contact.phone || "+266 5776 3829"}</a>
-              <span>{contact.address || "Maseru, Lesotho"}</span>
+              <span>Maseru, Lesotho</span>
+              <a href={`tel:${String(phone).replace(/\s/g, "")}`}>{phone}</a>
+              <a href={`mailto:${email}`}>{email}</a>
+              <Link href="/contact">Request consultation →</Link>
             </div>
           </div>
           <div className="shell footer-bottom">
@@ -109,6 +124,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <span>Legal information on this website is general and does not create a lawyer-client relationship.</span>
           </div>
         </footer>
+
+        <nav className="mobile-bottom-nav" aria-label="Mobile quick navigation">
+          <Link href="/"><span>⌂</span>Home</Link>
+          <Link href="/practice-areas"><span>⚖</span>Practice</Link>
+          <Link href="/our-team"><span>◉</span>Our Team</Link>
+          <Link href="/contact"><span>☎</span>Contact</Link>
+        </nav>
       </body>
     </html>
   );
