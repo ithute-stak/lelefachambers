@@ -2,7 +2,8 @@
 
 Dynamic public website and legal-practice operations platform for **Lelefa Chambers**, Maseru, Lesotho.
 
-Primary production domain: **https://lelefachambers.co.ls**
+Primary production domain: **https://lelefachambers.co.ls**  
+Production API: **https://api.lelefachambers.co.ls**
 
 ## What this project is
 
@@ -29,7 +30,10 @@ It now includes:
 - signed Ithute Pay webhook processing and idempotent event capture;
 - an institutional client portal;
 - role-based access and audit history;
-- PostgreSQL and legal-vault backup utilities.
+- Alembic database change control;
+- PostgreSQL and legal-vault backup utilities;
+- production liveness/readiness checks;
+- production DNS, Nginx and TLS deployment templates.
 
 ## Architecture
 
@@ -41,36 +45,33 @@ It now includes:
 - public media volume — CMS images/PDFs
 - private legal-vault volume — authenticated matter documents only
 - Ithute Pay — central provider/payment boundary for approved collections; Lelefa Chambers keeps business references and recovery allocations, not provider credentials
+- Nginx — public TLS edge for the website and API
 - Docker Compose — local and deployment-oriented orchestration
 
 ```text
-lelefachambers.co.ls
-        |
-        v
-      Next.js
-   +----+-------------------------------+
-   |        |            |              |
- Public    CMS      Legal Ops      Client Portal
- Website             Recovery
-                     Automation
-   |        |            |              |
-   +--------+-----+------+--------------+
-                  |
-                  v
-               FastAPI
-                  |
-       +----------+-----------+
-       |                      |
-   PostgreSQL                Redis
-       |                      |
- Legal clients / matters   Reminder stream
- settlements / schedules       |
- judgments / payments          v
- portal access               Worker
-       |
- Private Legal Document Vault
-       |
-       +---- server-to-server ----> Ithute Pay ----> approved providers
+Internet
+   |
+   +---- https://lelefachambers.co.ls --------+
+   |                                            |
+   +---- https://api.lelefachambers.co.ls      |
+                                                v
+                                             Nginx
+                              +-----------------+------------------+
+                              |                                    |
+                       127.0.0.1:3000                       127.0.0.1:8000
+                              |                                    |
+                           Next.js                              FastAPI
+                       +------+-------+                  +----------+----------+
+                       |      |       |                  |                     |
+                    Public   CMS   Client Portal     PostgreSQL              Redis
+                              |                         |                      |
+                        Legal Ops / Recovery       Legal records          Reminder stream
+                              |                         |                      |
+                              +-------------------------+------> Worker <------+ 
+                                                        |
+                                              Private Legal Vault
+                                                        |
+                                  server-to-server ----> Ithute Pay
 ```
 
 ## Phase 1 — Dynamic website and CMS
@@ -143,6 +144,28 @@ Lelefa Chambers is a **consumer** of Ithute Pay. Provider credentials and provid
 
 `ITHUTE_PAY_ENABLED=false` is the safe default. Activation requires a dedicated Chambers test/live application, webhook signing secret and the appropriate provider approval/certification in Ithute Pay.
 
+## Phase 5 — Production hardening
+
+- Alembic baseline and versioned database migration foundation;
+- guarded production startup checks;
+- API liveness endpoint: `/health/live`;
+- PostgreSQL + Redis readiness endpoint: `/health/ready`;
+- authenticated system-status endpoint;
+- production migration, backup, rollback and verification documentation;
+- deployment verification script.
+
+## Phase 6 — Production edge and domains
+
+Production routing is prepared for:
+
+- `https://lelefachambers.co.ls` — public website, admin and institutional client portal;
+- `https://www.lelefachambers.co.ls` — redirects to the primary domain;
+- `https://api.lelefachambers.co.ls` — FastAPI production API.
+
+The Compose file binds Next.js and FastAPI only to loopback (`127.0.0.1:3000` and `127.0.0.1:8000`). Nginx is the only public application edge. PostgreSQL and Redis are not exposed as public host ports.
+
+Use `docs/EDGE_ROUTING_SSL.md` for the DNS, Nginx and Let's Encrypt cutover procedure. The production environment template is `.env.production.example`.
+
 ## Local development
 
 1. Copy the environment template:
@@ -168,9 +191,36 @@ docker compose up -d --build
 - Automation & Ithute Pay: `http://localhost:3000/chambers-admin/automation`
 - Institutional Client Portal: `http://localhost:3000/client-portal`
 - API docs: `http://localhost:8000/docs`
-- API health: `http://localhost:8000/health`
+- API liveness: `http://localhost:8000/health/live`
+- API readiness: `http://localhost:8000/health/ready`
 
 The first API startup creates the schema, seeds initial public Chambers content and creates the bootstrap system-owner account from the environment. Change the bootstrap password after first use before any production launch.
+
+## Production edge preparation
+
+The expected DNS records are:
+
+```text
+A     lelefachambers.co.ls       <VPS_PUBLIC_IPV4>
+A     api.lelefachambers.co.ls   <VPS_PUBLIC_IPV4>
+CNAME www.lelefachambers.co.ls   lelefachambers.co.ls.
+```
+
+Before requesting TLS, check propagation from the VPS:
+
+```bash
+EXPECTED_VPS_IP=<VPS_PUBLIC_IPV4> bash scripts/check-production-dns.sh
+```
+
+Then follow:
+
+```bash
+sudo bash scripts/prepare-nginx-host.sh bootstrap
+sudo LETSENCRYPT_EMAIL=admin@lelefachambers.co.ls bash scripts/issue-letsencrypt.sh
+sudo bash scripts/prepare-nginx-host.sh tls
+```
+
+This prepares the public edge. The application deployment itself follows `docs/PRODUCTION_DEPLOYMENT.md`.
 
 ## Lelefa Debt Collectors integration
 
@@ -234,13 +284,13 @@ Only a terminal successful Ithute Pay state is converted into a matched recovery
 PostgreSQL:
 
 ```bash
-scripts/backup-postgres.sh
+bash scripts/backup-postgres.sh
 ```
 
 Private legal-document vault:
 
 ```bash
-scripts/backup-legal-vault.sh
+bash scripts/backup-legal-vault.sh
 ```
 
 Both generate SHA-256 checksum files. Production backups should be copied off-server into encrypted storage with tested restore procedures.
@@ -251,14 +301,20 @@ Pull requests validate:
 
 - Python API and worker compile/import;
 - pytest model/route/role/schedule/webhook tests;
+- Alembic baseline on a fresh database;
 - Next.js production build;
 - Docker Compose configuration, including the automation worker;
+- loopback-only API/web port publication;
 - PostgreSQL backup/restore script syntax;
-- private legal-vault backup script syntax.
+- private legal-vault backup script syntax;
+- DNS, Nginx and Let's Encrypt helper script syntax;
+- production domain templates.
 
 ## Security rules
 
 - no production secrets in Git;
+- PostgreSQL and Redis are not publicly published;
+- Next.js and FastAPI bind to host loopback and are exposed through Nginx;
 - PostgreSQL is never exposed directly to the browser;
 - public consultation forms request only minimum-necessary information;
 - legal matter documents are not served through the public media mount;
@@ -271,14 +327,14 @@ Pull requests validate:
 
 ## Next work
 
-The strongest remaining platform-hardening work is:
+The next step is the controlled VPS deployment and domain cutover. After deployment, the strongest remaining hardening work is:
 
-- Alembic migration baseline and versioned schema changes;
-- connect reminder events to Ithute Push/email/SMS policies;
-- downloadable institutional recovery statements and management reports;
+- MFA and stronger session lifecycle controls;
+- invitation/password-reset flows for Chambers and client-portal users;
 - private encrypted object storage with malware scanning;
+- monitored off-server backups and restore drills;
 - end-to-end browser tests;
-- monitored production deployment to `lelefachambers.co.ls`;
+- application/host observability and alerts;
 - sandbox certification of the Lelefa Chambers Ithute Pay application before any live payment activation.
 
-See `docs/LEGAL_OPERATIONS.md`, `docs/LEGAL_RECOVERY_PHASE_3.md` and `docs/RECOVERY_AUTOMATION_PHASE_4.md` for the detailed operating model.
+See `docs/LEGAL_OPERATIONS.md`, `docs/LEGAL_RECOVERY_PHASE_3.md`, `docs/RECOVERY_AUTOMATION_PHASE_4.md`, `docs/PRODUCTION_DEPLOYMENT.md` and `docs/EDGE_ROUTING_SSL.md` for the detailed operating model.
