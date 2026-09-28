@@ -200,7 +200,7 @@ def _number_word(value: int) -> str:
 
 
 def _replace_in_paragraph(paragraph, old: str, new: str) -> None:
-    if not old:
+    if not old or old == new:
         return
     while old in "".join(run.text for run in paragraph.runs):
         full = "".join(run.text for run in paragraph.runs)
@@ -278,9 +278,6 @@ def build_docx_bytes(req: DemandLetterRequest) -> tuple[bytes, DemandLetterPrevi
     for old, new in _template_replacements(req, preview):
         _replace_everywhere(document, old, new)
 
-    # The approved Batlokoa template already contains the Lelefa Chambers letterhead
-    # and footer as real Word header/footer content. We intentionally do not rebuild
-    # them here: opening the template and editing only body values preserves them.
     output = io.BytesIO()
     document.save(output)
     return output.getvalue(), preview
@@ -312,18 +309,7 @@ def build_pdf_bytes(req: DemandLetterRequest) -> tuple[bytes, DemandLetterPrevie
         return pdf.read_bytes(), preview
 
 
-def _store_generated(
-    *,
-    db: Session,
-    user: User,
-    matter_id: int,
-    payload: bytes,
-    extension: str,
-    content_type: str,
-    req: DemandLetterRequest,
-    preview: DemandLetterPreview,
-    visibility: str,
-) -> MatterDocument:
+def _store_generated(*, db: Session, user: User, matter_id: int, payload: bytes, extension: str, content_type: str, req: DemandLetterRequest, preview: DemandLetterPreview, visibility: str) -> MatterDocument:
     stored_name = f"{secrets.token_hex(24)}.{extension}"
     (vault_path / stored_name).write_bytes(payload)
     original_name = f"{_safe_stem(req)}.{extension}"
@@ -361,30 +347,17 @@ def render_demand_letter_html(req: DemandLetterRequest, _user: User = Depends(cu
 @router.post("/demand-letter/render-docx")
 def render_demand_letter_docx(req: DemandLetterRequest, _user: User = Depends(current_user)):
     payload, _preview = build_docx_bytes(req)
-    return StreamingResponse(
-        io.BytesIO(payload),
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f'attachment; filename="{_safe_stem(req)}.docx"'},
-    )
+    return StreamingResponse(io.BytesIO(payload), media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", headers={"Content-Disposition": f'attachment; filename="{_safe_stem(req)}.docx"'})
 
 
 @router.post("/demand-letter/render-pdf")
 def render_demand_letter_pdf(req: DemandLetterRequest, _user: User = Depends(current_user)):
     payload, _preview = build_pdf_bytes(req)
-    return StreamingResponse(
-        io.BytesIO(payload),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{_safe_stem(req)}.pdf"'},
-    )
+    return StreamingResponse(io.BytesIO(payload), media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{_safe_stem(req)}.pdf"'})
 
 
 @router.post("/demand-letter/save-to-matter", status_code=201)
-def save_demand_letter_to_matter(
-    payload: SaveDemandLetterRequest,
-    request: Request,
-    db: Session = Depends(get_db),
-    user: User = Depends(require_recovery("document:create")),
-):
+def save_demand_letter_to_matter(payload: SaveDemandLetterRequest, request: Request, db: Session = Depends(get_db), user: User = Depends(require_recovery("document:create"))):
     from app.operations import Matter
 
     matter = db.get(Matter, payload.matter_id)
@@ -399,65 +372,15 @@ def save_demand_letter_to_matter(
     docx_bytes, preview = build_docx_bytes(req)
     created: list[MatterDocument] = []
     if "docx" in formats:
-        created.append(
-            _store_generated(
-                db=db,
-                user=user,
-                matter_id=payload.matter_id,
-                payload=docx_bytes,
-                extension="docx",
-                content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                req=req,
-                preview=preview,
-                visibility=payload.visibility,
-            )
-        )
+        created.append(_store_generated(db=db, user=user, matter_id=payload.matter_id, payload=docx_bytes, extension="docx", content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", req=req, preview=preview, visibility=payload.visibility))
     if "pdf" in formats:
         pdf_bytes, _ = build_pdf_bytes(req)
-        created.append(
-            _store_generated(
-                db=db,
-                user=user,
-                matter_id=payload.matter_id,
-                payload=pdf_bytes,
-                extension="pdf",
-                content_type="application/pdf",
-                req=req,
-                preview=preview,
-                visibility=payload.visibility,
-            )
-        )
+        created.append(_store_generated(db=db, user=user, matter_id=payload.matter_id, payload=pdf_bytes, extension="pdf", content_type="application/pdf", req=req, preview=preview, visibility=payload.visibility))
 
-    audit(
-        db,
-        request,
-        user,
-        "document_studio.demand_saved",
-        "legal_matter",
-        str(payload.matter_id),
-        after={
-            "chambers_reference": req.chambers_reference,
-            "debtor": req.verification.debtor_name,
-            "source_reference": req.verification.source_reference,
-            "verification_hash": preview.verification.snapshot.inputs_hash,
-            "formats": formats,
-            "document_ids": [item.id for item in created],
-        },
-    )
+    audit(db, request, user, "document_studio.demand_saved", "legal_matter", str(payload.matter_id), after={"chambers_reference": req.chambers_reference, "debtor": req.verification.debtor_name, "source_reference": req.verification.source_reference, "verification_hash": preview.verification.snapshot.inputs_hash, "formats": formats, "document_ids": [item.id for item in created]})
     db.commit()
     return {
         "matter_id": payload.matter_id,
         "verification_hash": preview.verification.snapshot.inputs_hash,
-        "documents": [
-            {
-                "id": item.id,
-                "title": item.title,
-                "original_name": item.original_name,
-                "content_type": item.content_type,
-                "checksum_sha256": item.checksum_sha256,
-                "visibility": item.visibility,
-                "download_url": f"/api/v1/ops/documents/{item.id}/download",
-            }
-            for item in created
-        ],
+        "documents": [{"id": item.id, "title": item.title, "original_name": item.original_name, "content_type": item.content_type, "checksum_sha256": item.checksum_sha256, "visibility": item.visibility, "download_url": f"/api/v1/ops/documents/{item.id}/download"} for item in created],
     }
