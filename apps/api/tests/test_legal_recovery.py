@@ -29,6 +29,29 @@ def test_micro_loan_matches_loanhub_reference_example():
     assert result.demand_letter_eligible is True
 
 
+def test_compound_interest_uses_contractual_rate_per_period():
+    result = calculate(
+        DebtVerificationRequest(
+            debtor_name="Compound Borrower",
+            national_id="987654321",
+            source_reference="TEST-COMPOUND-001",
+            loan_date="2026-01-01",
+            principal=Decimal("1000"),
+            annual_rate_percent=Decimal("20"),
+            term_months=3,
+            method=CalculationMethod.COMPOUND_INTEREST,
+            claimed_outstanding=Decimal("1728"),
+            as_of_date="2026-03-31",
+        )
+    )
+
+    assert result.snapshot.total_repayable == Decimal("1728.00")
+    assert result.snapshot.contractual_interest == Decimal("728.00")
+    assert result.snapshot.standard_instalment == Decimal("576.00")
+    assert result.snapshot.verified_outstanding == Decimal("1728.00")
+    assert result.demand_letter_eligible is True
+
+
 def test_payments_are_credited_before_demand_eligibility():
     result = calculate(
         DebtVerificationRequest(

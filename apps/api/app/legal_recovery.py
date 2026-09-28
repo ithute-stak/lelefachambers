@@ -144,8 +144,14 @@ def _simple_or_flat(req: DebtVerificationRequest) -> tuple[Decimal, Decimal, lis
 
 
 def _compound(req: DebtVerificationRequest) -> tuple[Decimal, Decimal, list[ScheduleRow]]:
-    monthly_rate = (req.annual_rate_percent / Decimal("100")) / Decimal("12")
-    total = money(req.principal * ((Decimal("1") + monthly_rate) ** req.term_months) + req.processing_fee)
+    """Compound the entered contractual rate once per contractual period.
+
+    In the Chambers Document Studio, ``term_months`` is also the number of
+    contractual periods shown to the operator. A 20% rate over 3 periods is
+    therefore 1000 * 1.20^3 = 1728, not an annual 20% rate divided by 12.
+    """
+    period_rate = req.annual_rate_percent / Decimal("100")
+    total = money(req.principal * ((Decimal("1") + period_rate) ** req.term_months) + req.processing_fee)
     standard = money(total / Decimal(req.term_months))
     schedule: list[ScheduleRow] = []
     outstanding = total
