@@ -18,7 +18,7 @@ type NavItem = {
   href: string;
   label: string;
   description: string;
-  icon: "grid" | "people" | "briefcase" | "recovery" | "automation";
+  icon: "grid" | "people" | "briefcase" | "recovery" | "document" | "automation";
 };
 
 const navItems: NavItem[] = [
@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
   { href: "/chambers-admin/staff", label: "Staff", description: "People & access", icon: "people" },
   { href: "/chambers-admin/operations", label: "Legal Operations", description: "Clients & matters", icon: "briefcase" },
   { href: "/chambers-admin/recovery", label: "Recovery", description: "Payments & execution", icon: "recovery" },
+  { href: "/chambers-admin/document-studio", label: "Document Studio", description: "Verified legal documents", icon: "document" },
   { href: "/chambers-admin/automation", label: "Automation", description: "Workflows & Ithute Pay", icon: "automation" },
 ];
 
@@ -33,6 +34,7 @@ const pageMeta: Array<{ prefix: string; title: string; eyebrow: string }> = [
   { prefix: "/chambers-admin/staff", title: "Staff Management", eyebrow: "People & access" },
   { prefix: "/chambers-admin/operations", title: "Legal Operations", eyebrow: "Matters & casework" },
   { prefix: "/chambers-admin/recovery", title: "Recovery Workspace", eyebrow: "Recovery & institutional clients" },
+  { prefix: "/chambers-admin/document-studio", title: "Document Studio", eyebrow: "Verified legal documents" },
   { prefix: "/chambers-admin/automation", title: "Automation", eyebrow: "Workflow control" },
   { prefix: "/chambers-admin", title: "Administration Overview", eyebrow: "Chambers control centre" },
 ];
@@ -41,6 +43,7 @@ function Icon({ name }: { name: NavItem["icon"] }) {
   if (name === "people") return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
   if (name === "briefcase") return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></svg>;
   if (name === "recovery") return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v10M15 9.5c0-1.1-1.3-2-3-2s-3 .9-3 2 1.3 2 3 2 3 .9 3 2-1.3 2-3 2-3-.9-3-2"/></svg>;
+  if (name === "document") return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/></svg>;
   if (name === "automation") return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="4"/></svg>;
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
 }
