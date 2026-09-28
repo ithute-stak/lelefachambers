@@ -17,10 +17,6 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
   exit 1
 fi
 
-# Read individual values from Docker Compose's env file without sourcing it as
-# shell code. Docker env files may legitimately contain spaces in values (for
-# example BOOTSTRAP_ADMIN_NAME=Lelefa Chambers Administrator), which would be
-# unsafe/invalid to `source` directly in bash.
 env_value() {
   local key="$1"
   local fallback="$2"
@@ -44,7 +40,26 @@ POSTGRES_USER="${POSTGRES_USER:-$(env_value POSTGRES_USER lelefa)}"
 POSTGRES_DB="${POSTGRES_DB:-$(env_value POSTGRES_DB lelefachambers)}"
 LELEFA_API_HOST_PORT="${LELEFA_API_HOST_PORT:-$(env_value LELEFA_API_HOST_PORT 18080)}"
 LELEFA_WEB_HOST_PORT="${LELEFA_WEB_HOST_PORT:-$(env_value LELEFA_WEB_HOST_PORT 13000)}"
-LELEFA_IMAGE_TAG="${LELEFA_IMAGE_TAG:-$(env_value LELEFA_IMAGE_TAG latest)}"
+LELEFA_IMAGE_TAG="${LELEFA_IMAGE_TAG:-$(env_value LELEFA_IMAGE_TAG '')}"
+export LELEFA_IMAGE_TAG
+
+if [[ -z "$LELEFA_IMAGE_TAG" ]]; then
+  echo "LELEFA_IMAGE_TAG is required." >&2
+  echo "Set it to the full tested Git commit SHA published by GitHub Actions." >&2
+  exit 1
+fi
+
+if [[ "$LELEFA_IMAGE_TAG" == "latest" ]]; then
+  echo "Refusing to deploy mutable tag 'latest' to production." >&2
+  echo "Use the full tested Git commit SHA from the successful image-publish workflow." >&2
+  exit 1
+fi
+
+if [[ ! "$LELEFA_IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "LELEFA_IMAGE_TAG must be a full 40-character lowercase Git commit SHA." >&2
+  echo "Received: $LELEFA_IMAGE_TAG" >&2
+  exit 1
+fi
 
 compose() {
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
@@ -56,8 +71,14 @@ if ! docker network inspect public-edge >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "==> Pulling published production images"
+echo "==> Preflight: pulling the complete tested release ${LELEFA_IMAGE_TAG}"
+# This is deliberately the first mutating deployment step. If either image is
+# unavailable or cannot be pulled, the script exits before migrations or
+# application-container replacement can occur.
 compose pull api worker web
+
+echo "==> Preflight complete: all application images are available locally"
+compose images api worker web
 
 echo "==> Ensuring PostgreSQL and Redis are running"
 compose up -d db redis
@@ -71,10 +92,10 @@ for _ in $(seq 1 60); do
 done
 compose exec -T db pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null
 
-echo "==> Applying Alembic migrations using the pulled API image"
+echo "==> Applying Alembic migrations using tested API image ${LELEFA_IMAGE_TAG}"
 compose run --rm api alembic upgrade head
 
-echo "==> Starting application services from published images"
+echo "==> Starting application services from tested published images"
 compose up -d --remove-orphans api worker web
 
 echo "==> Current services"
@@ -102,7 +123,7 @@ done
 curl --fail --silent "http://127.0.0.1:${LELEFA_WEB_HOST_PORT}/" >/dev/null
 
 echo "Deployment complete."
-echo "Image tag: ${LELEFA_IMAGE_TAG}"
+echo "Immutable image tag: ${LELEFA_IMAGE_TAG}"
 echo "Local web: http://127.0.0.1:${LELEFA_WEB_HOST_PORT}"
 echo "Local API: http://127.0.0.1:${LELEFA_API_HOST_PORT}"
 echo "Caddy upstream web: lelefachambers-web:3000 on public-edge"
