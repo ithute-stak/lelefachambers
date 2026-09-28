@@ -102,7 +102,7 @@ jobs:
           grep -q 'ghcr.io/ithute-stak/lelefachambers-web:0123456789abcdef0123456789abcdef01234567' /tmp/compose-images.txt
           grep -q '127.0.0.1' /tmp/compose-images.txt
       - name: Validate operations, edge and image deployment scripts
-        run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh scripts/verify-production.sh scripts/prepare-nginx-host.sh scripts/issue-letsencrypt.sh scripts/check-production-dns.sh scripts/deploy-images.sh
+        run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh scripts/verify-production.sh scripts/prepare-nginx-host.sh scripts/issue-letsencrypt.sh scripts/check-production-dns.sh scripts/deploy-images.sh scripts/pull-chambers scripts/install-pull-chambers-command.sh
       - name: Validate production domain and image templates
         run: |
           grep -q 'lelefachambers.co.ls' deploy/nginx/lelefachambers-bootstrap.conf
@@ -111,4 +111,5 @@ jobs:
           grep -q 'LELEFA_IMAGE_TAG=CHANGE_THIS_FULL_TESTED_GIT_COMMIT_SHA' .env.production.example
           grep -q 'packages: write' .github/workflows/publish-images.yml
           grep -q 'No VPS deployment was performed' .github/workflows/publish-images.yml
+          grep -q 'pull-chambers latest' scripts/install-pull-chambers-command.sh
           test -f 'apps/web/app/api/v1/[...path]/route.ts'
