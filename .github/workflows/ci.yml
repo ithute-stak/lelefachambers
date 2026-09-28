@@ -93,11 +93,13 @@ jobs:
           grep -q '127.0.0.1' /tmp/compose.txt
           grep -q 'target: 3000' /tmp/compose.txt
           grep -q 'target: 8000' /tmp/compose.txt
-      - name: Validate image-only production Compose stack
+      - name: Validate immutable image-only production Compose stack
+        env:
+          LELEFA_IMAGE_TAG: 0123456789abcdef0123456789abcdef01234567
         run: |
           docker compose -f compose.images.yaml config >/tmp/compose-images.txt
-          grep -q 'ghcr.io/ithute-stak/lelefachambers-api:latest' /tmp/compose-images.txt
-          grep -q 'ghcr.io/ithute-stak/lelefachambers-web:latest' /tmp/compose-images.txt
+          grep -q 'ghcr.io/ithute-stak/lelefachambers-api:0123456789abcdef0123456789abcdef01234567' /tmp/compose-images.txt
+          grep -q 'ghcr.io/ithute-stak/lelefachambers-web:0123456789abcdef0123456789abcdef01234567' /tmp/compose-images.txt
           grep -q '127.0.0.1' /tmp/compose-images.txt
       - name: Validate operations, edge and image deployment scripts
         run: bash -n scripts/backup-postgres.sh scripts/restore-postgres.sh scripts/backup-legal-vault.sh scripts/verify-production.sh scripts/prepare-nginx-host.sh scripts/issue-letsencrypt.sh scripts/check-production-dns.sh scripts/deploy-images.sh
@@ -106,6 +108,7 @@ jobs:
           grep -q 'lelefachambers.co.ls' deploy/nginx/lelefachambers-bootstrap.conf
           grep -q 'api.lelefachambers.co.ls' deploy/nginx/lelefachambers-production.conf
           grep -q 'NEXT_PUBLIC_API_URL=https://lelefachambers.co.ls' .env.production.example
-          grep -q 'LELEFA_IMAGE_TAG=latest' .env.production.example
+          grep -q 'LELEFA_IMAGE_TAG=CHANGE_THIS_FULL_TESTED_GIT_COMMIT_SHA' .env.production.example
           grep -q 'packages: write' .github/workflows/publish-images.yml
+          grep -q 'No VPS deployment was performed' .github/workflows/publish-images.yml
           test -f 'apps/web/app/api/v1/[...path]/route.ts'
