@@ -7,6 +7,7 @@ from app.recovery import router as recovery_router
 from app.automation import pay_config, router as automation_router
 from app.production import router as production_router
 from app.staff import router as staff_router
+from app.legal_recovery import router as legal_recovery_router
 
 
 @app.middleware("http")
@@ -34,5 +35,6 @@ app.include_router(recovery_router)
 app.include_router(automation_router)
 app.include_router(production_router)
 app.include_router(staff_router)
+app.include_router(legal_recovery_router)
 
 __all__ = ["app"]
