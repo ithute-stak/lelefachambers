@@ -1,6 +1,9 @@
 from decimal import Decimal
+from io import BytesIO
 
-from app.document_studio import DemandLetterRequest, build_demand_letter
+from docx import Document
+
+from app.document_studio import DemandLetterRequest, build_demand_letter, build_docx_bytes
 from app.legal_recovery import CalculationMethod, DebtVerificationRequest, PaymentInput
 
 
@@ -39,7 +42,28 @@ def test_verified_debt_generates_demand_letter_html():
     assert result.html is not None
     assert "LELEFA CHAMBERS" in result.html
     assert "Mpho Moletsane" in result.html
-    assert "ADVOCATE MATS'EPE LELEFA, LLM" in result.html
+    assert "Advocate Mats'epe Lelefa, LLM" in result.html
+    assert "Lenyora House, Office No. 4" in result.html
+
+
+def test_approved_docx_template_preserves_letterhead_and_footer():
+    payload, result = build_docx_bytes(verified_request())
+    assert result.eligible is True
+    document = Document(BytesIO(payload))
+
+    body = "\n".join(paragraph.text for paragraph in document.paragraphs)
+    table_text = "\n".join(cell.text for table in document.tables for row in table.rows for cell in row.cells)
+    header_text = "\n".join(paragraph.text for section in document.sections for paragraph in section.header.paragraphs)
+    footer_text = "\n".join(paragraph.text for section in document.sections for paragraph in section.footer.paragraphs)
+
+    assert "MPHO MOLETSANE" in body
+    assert "National ID: 123456789" in body
+    assert "Source Ref: BAT-001" in body
+    assert "LC/BAT/2026/001" in body
+    assert "M 928.00" in body + table_text
+    assert "Lenyora House, Office No. 4" in header_text
+    assert "LELEFA CHAMBERS" in footer_text
+    assert "+266 5776 3829" in footer_text
 
 
 def test_unverified_claim_never_renders_formal_letter():
