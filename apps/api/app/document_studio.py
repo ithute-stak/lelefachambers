@@ -75,8 +75,8 @@ def _rate_description(req: DemandLetterRequest) -> str:
     rate = req.verification.annual_rate_percent
     rendered = f"{rate.normalize()}%" if rate != rate.to_integral() else f"{int(rate)}%"
     if req.verification.method.value == "micro_loan":
-        return f"{rendered} contractual rate under the LoanHub Micro Loan Method"
-    return f"{rendered} per annum (contractual)"
+        return f"{rendered} under the LoanHub Micro Loan Method"
+    return f"{rendered} per annum"
 
 
 def _safe_stem(req: DemandLetterRequest) -> str:
@@ -99,7 +99,7 @@ def build_demand_letter(req: DemandLetterRequest) -> DemandLetterPreview:
     paragraphs = [
         f"(1) We act on the instructions of {req.client_name}, our Client, in relation to the loan account held in your name.",
         f"(2) Our Client's records reflect that, on or about {_long_date(req.verification.loan_date)}, a loan facility in the principal amount of {principal} was advanced to you.",
-        f"(3) The facility attracted interest at the agreed {rate_description}. Payments totalling {payments} have been credited to the account. Following application of those payments and contractual interest accrued under the loan agreement, the independently verified amount presently due and owing is {outstanding}.",
+        f"(3) The facility attracted interest at the agreed contractual rate of {rate_description}. Payments totalling {payments} have been credited to the account. Following application of those payments and contractual interest accrued under the loan agreement, the independently verified amount presently due and owing is {outstanding}.",
         "(4) Despite prior recovery efforts undertaken on behalf of our Client, the above balance remains unpaid.",
         f"(5) We therefore demand that, within {req.demand_days} ({_number_word(req.demand_days)}) days of receipt of this letter, you either settle the outstanding balance of {outstanding} in full or contact Lelefa Chambers in writing to propose a payment arrangement acceptable to our Client.",
         "(6) If payment or a satisfactory written arrangement is not made within that period, we are instructed to advise our Client on further recovery action, which may include appropriate legal proceedings for recovery of the debt, together with contractual interest and recoverable legal costs, to the extent lawfully claimable.",
