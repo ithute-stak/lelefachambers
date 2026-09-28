@@ -1,8 +1,33 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
+import styles from "./document-studio.module.css";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+type ScheduleRow = {
+  period: number;
+  opening_balance: string;
+  interest: string;
+  principal_component: string;
+  instalment: string;
+  closing_balance: string;
+};
+
+type Snapshot = {
+  inputs_hash: string;
+  method: string;
+  principal: string;
+  contractual_interest: string;
+  processing_fee: string;
+  total_repayable: string;
+  payments_credited: string;
+  verified_outstanding: string;
+  standard_instalment: string;
+  term_months: number;
+  annual_rate_percent: string;
+  schedule: ScheduleRow[];
+};
 
 type Preview = {
   eligible: boolean;
@@ -12,7 +37,11 @@ type Preview = {
   deadline: string;
   amount_summary: Record<string, string>;
   html: string | null;
-  verification: { snapshot: { inputs_hash: string; total_repayable: string; payments_credited: string; verified_outstanding: string } };
+  verification: {
+    claimed_outstanding?: string | null;
+    variance?: string | null;
+    snapshot: Snapshot;
+  };
 };
 
 type Matter = { id: number; matter_reference?: string; title?: string };
@@ -25,7 +54,21 @@ const methods = [
   ["compound_interest", "Compound Interest"],
   ["reducing_balance_amortised", "Reducing Balance / Amortised"],
   ["daily_accrual_reducing_balance", "Daily Accrual Reducing Balance"],
-];
+] as const;
+
+function todayInput(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function money(value: unknown): string {
+  const number = Number(value ?? 0);
+  if (!Number.isFinite(number)) return "M 0.00";
+  return `M ${number.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function methodLabel(value: unknown): string {
+  return methods.find(([key]) => key === value)?.[1] || String(value || "Not selected");
+}
 
 export default function DocumentStudioPage() {
   const [token, setToken] = useState("");
@@ -48,6 +91,8 @@ export default function DocumentStudioPage() {
   }, [token]);
 
   const verificationHash = useMemo(() => preview?.verification?.snapshot?.inputs_hash || "", [preview]);
+  const snapshot = preview?.verification?.snapshot;
+  const claimedOutstanding = payload?.verification?.claimed_outstanding;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -167,96 +212,231 @@ export default function DocumentStudioPage() {
   }
 
   if (!token) {
-    return <div className="admin-card"><div className="admin-body"><h2>Document Studio</h2><p className="muted">Sign in to Chambers administration before opening this workspace.</p></div></div>;
+    return (
+      <div className={styles.studioPage}>
+        <div className={styles.panel}>
+          <div className={styles.panelBody}>
+            <h2>Document Studio</h2>
+            <p>Sign in to Chambers administration before opening this workspace.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="admin-card">
-      <header className="admin-head">
-        <div><strong>Chambers Document Studio</strong><div style={{fontSize:12,opacity:.75}}>Verify first • Render from approved letterhead • Audit every calculation</div></div>
-        <a className="button button-light button-small" href="/chambers-admin/recovery">Recovery Workspace</a>
-      </header>
-      <div className="admin-body">
-        {message && <p className="notice">{message}</p>}
-        <div className="content-grid" style={{alignItems:"start"}}>
-          <form className="content-card" onSubmit={submit}>
-            <div className="eyebrow">Verified demand</div>
-            <h2 style={{fontSize:"2rem",marginTop:6}}>Prepare formal demand letter</h2>
-            <p className="muted">The letter remains blocked until the claimed outstanding agrees with the independent calculation.</p>
+    <div className={styles.studioPage}>
+      <section className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <div className={styles.eyebrow}>Verified legal documents</div>
+          <h1>One workspace for debt verification and formal demands</h1>
+          <p>Reconstruct the debt independently, compare the client claim, inspect the repayment calculation and generate the approved Chambers letter only after verification passes.</p>
+        </div>
+        <div className={styles.heroActions}>
+          <a className={styles.secondaryButton} href="/chambers-admin/recovery">Recovery workspace</a>
+          <button className={styles.primaryButton} form="demand-studio-form" type="submit" disabled={busy}>
+            {busy ? "Verifying…" : "Verify debt"}
+          </button>
+        </div>
+      </section>
+
+      <section className={styles.metrics} aria-label="Document Studio summary">
+        <Metric label="Contractual total" value={snapshot ? money(snapshot.total_repayable) : "—"} hint="Independent calculation" />
+        <Metric label="Payments credited" value={snapshot ? money(snapshot.payments_credited) : "—"} hint="Applied before demand" />
+        <Metric label="Client claim" value={payload ? money(claimedOutstanding) : "—"} hint="Amount supplied by client" />
+        <Metric
+          label="Demand status"
+          value={!preview ? "Awaiting verification" : preview.eligible ? "Verified" : "Blocked"}
+          hint={preview?.eligible ? `Verified outstanding ${money(snapshot?.verified_outstanding)}` : preview ? "Review the calculation variance" : "Complete the account inputs"}
+          status={preview ? (preview.eligible ? "good" : "bad") : undefined}
+        />
+      </section>
+
+      <div className={styles.workspaceNav} aria-hidden="true">
+        <span className={styles.activeNav}>Debt verification</span>
+        <span>Calculation result</span>
+        <span>Approved letter preview</span>
+      </div>
+
+      {message && <div className={styles.message}>{message}</div>}
+
+      <div className={styles.workspaceGrid}>
+        <form id="demand-studio-form" className={styles.panel} onSubmit={submit}>
+          <header className={styles.panelHeader}>
+            <div>
+              <h2>Account inputs</h2>
+              <p>Client, debtor, contractual and payment information.</p>
+            </div>
+            <span className={styles.resultHeaderStatus}>Verification source</span>
+          </header>
+          <div className={styles.panelBody}>
             <Section title="Client & references">
               <Field label="Client name"><input name="client_name" defaultValue="Batlokoa Financial Services" required /></Field>
               <Field label="Client reference"><input name="client_reference" /></Field>
               <Field label="Chambers reference"><input name="chambers_reference" placeholder="LC/BATL/B1406/270926" required /></Field>
               <Field label="Source / loan reference"><input name="source_reference" required /></Field>
             </Section>
+
             <Section title="Debtor">
               <Field label="Debtor full name"><input name="debtor_name" required /></Field>
               <Field label="National ID"><input name="national_id" required /></Field>
-              <Field label="Address"><textarea name="debtor_address" rows={3} /></Field>
+              <Field label="Address" full><textarea name="debtor_address" rows={3} /></Field>
             </Section>
+
             <Section title="Debt calculation">
               <Field label="Loan date"><input type="date" name="loan_date" required /></Field>
               <Field label="Principal"><input type="number" name="principal" step="0.01" min="0.01" required /></Field>
               <Field label="Contractual rate %"><input type="number" name="rate" step="0.0001" min="0" required /></Field>
               <Field label="Term months"><input type="number" name="term_months" min="1" required /></Field>
-              <Field label="Calculation method"><select name="method" defaultValue="micro_loan">{methods.map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+              <Field label="Calculation method" full>
+                <select name="method" defaultValue="micro_loan">{methods.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+              </Field>
               <Field label="Processing fee"><input type="number" name="processing_fee" step="0.01" min="0" defaultValue="0" /></Field>
+              <Field label="Claimed outstanding"><input type="number" name="claimed_outstanding" step="0.01" min="0" required /></Field>
               <Field label="Payments credited"><input type="number" name="payment_amount" step="0.01" min="0" defaultValue="0" /></Field>
               <Field label="Payment date"><input type="date" name="payment_date" /></Field>
               <Field label="Payment reference"><input name="payment_reference" /></Field>
-              <Field label="Claimed outstanding"><input type="number" name="claimed_outstanding" step="0.01" min="0" required /></Field>
-              <Field label="Verify as at"><input type="date" name="as_of_date" required /></Field>
+              <Field label="Verify as at"><input type="date" name="as_of_date" defaultValue={todayInput()} required /></Field>
             </Section>
+
             <Section title="Demand settings">
-              <Field label="Letter date"><input type="date" name="letter_date" required /></Field>
+              <Field label="Letter date"><input type="date" name="letter_date" defaultValue={todayInput()} required /></Field>
               <Field label="Demand period (days)"><input type="number" name="demand_days" min="1" max="90" defaultValue="7" required /></Field>
-              <Field label="Payment instructions"><textarea name="payment_instructions" rows={3} /></Field>
-              <Field label="Additional notice"><textarea name="additional_notice" rows={3} /></Field>
+              <Field label="Payment instructions" full><textarea name="payment_instructions" rows={3} /></Field>
+              <Field label="Additional notice" full><textarea name="additional_notice" rows={3} /></Field>
               <Field label="Signatory"><input name="signatory_name" defaultValue="Advocate Mats'epe Lelefa, LLM" required /></Field>
               <Field label="Title"><input name="signatory_title" defaultValue="Managing Partner" required /></Field>
             </Section>
-            <button className="button" disabled={busy} aria-busy={busy}>{busy ? "Verifying…" : "Verify debt & prepare letter"}</button>
-          </form>
 
-          <div className="content-card" style={{position:"sticky",top:90}}>
-            <div className="eyebrow">Verification result</div>
-            {!preview && <><h2 style={{fontSize:"1.8rem"}}>No draft yet</h2><p className="muted">Complete the form to independently recalculate the debt before the formal demand is rendered.</p></>}
-            {preview && <>
-              <h2 style={{fontSize:"1.8rem"}}>{preview.eligible ? "Verified — ready to render" : "Blocked — review required"}</h2>
-              {preview.blockers.length > 0 && <div className="notice"><strong>Generation blocked</strong><ul>{preview.blockers.map((item) => <li key={item}>{item}</li>)}</ul></div>}
-              {preview.warnings.length > 0 && <div className="notice"><strong>Warnings</strong><ul>{preview.warnings.map((item) => <li key={item}>{item}</li>)}</ul></div>}
-              <dl style={{display:"grid",gridTemplateColumns:"1fr auto",gap:"10px 20px",margin:"24px 0"}}>
-                {Object.entries(preview.amount_summary).map(([key,value]) => <div key={key} style={{display:"contents"}}><dt style={{textTransform:"capitalize"}}>{key.replaceAll("_"," ")}</dt><dd style={{fontWeight:700,margin:0}}>{value}</dd></div>)}
-              </dl>
-              <p><strong>Deadline:</strong> {preview.deadline}</p>
-              {verificationHash && <p className="muted" style={{fontSize:11,overflowWrap:"anywhere"}}>Verification hash: {verificationHash}</p>}
-
-              <div style={{display:"flex",gap:8,flexWrap:"wrap",margin:"18px 0"}}>
-                <button type="button" className="button" disabled={!preview.eligible || actionBusy !== ""} onClick={() => download("pdf")}>{actionBusy === "pdf" ? "Generating PDF…" : "Download PDF"}</button>
-                <button type="button" className="button button-light" disabled={!preview.eligible || actionBusy !== ""} onClick={() => download("docx")}>{actionBusy === "docx" ? "Generating DOCX…" : "Download DOCX"}</button>
-                <button type="button" className="button button-light" disabled={!preview.eligible || !preview.html || actionBusy !== ""} onClick={printPreview}>Print preview</button>
-              </div>
-
-              <div style={{borderTop:"1px solid #ddd",paddingTop:16,marginTop:16}}>
-                <strong>Save verified letter to matter</strong>
-                <p className="muted" style={{fontSize:12}}>Both the editable DOCX and signed-ready PDF are stored in the private legal document vault with checksums and the verification hash.</p>
-                <Field label="Matter"><select value={matterId} onChange={(event) => setMatterId(event.target.value)}><option value="">Select matter…</option>{matters.map((matter) => <option key={matter.id} value={matter.id}>{matter.matter_reference || `Matter ${matter.id}`} — {matter.title || "Untitled matter"}</option>)}</select></Field>
-                <button type="button" className="button" disabled={!preview.eligible || !matterId || actionBusy !== ""} onClick={saveToMatter}>{actionBusy === "vault" ? "Saving to vault…" : "Save DOCX + PDF to matter"}</button>
-              </div>
-
-              {preview.html && <iframe title="Demand letter preview" srcDoc={preview.html} style={{width:"100%",height:620,border:"1px solid #ddd",marginTop:20,background:"white"}} />}
-            </>}
+            <div className={styles.formFooter}>
+              <div className={styles.formFootnote}>Formal generation stays locked until the independently verified balance agrees with the client claim.</div>
+              <button className={styles.primaryButton} disabled={busy} aria-busy={busy}>{busy ? "Verifying account…" : "Verify & prepare demand"}</button>
+            </div>
           </div>
-        </div>
+        </form>
+
+        <section className={`${styles.panel} ${styles.resultPanel}`}>
+          <header className={styles.panelHeader}>
+            <div>
+              <h2>Calculation result</h2>
+              <p>LoanHub-aligned reconstruction with legal demand eligibility.</p>
+            </div>
+            <span className={`${styles.resultHeaderStatus} ${preview ? (preview.eligible ? styles.goodBadge : styles.badBadge) : ""}`}>
+              {!preview ? "Not verified" : preview.eligible ? "Verified" : "Blocked"}
+            </span>
+          </header>
+
+          {!preview ? (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyStateInner}>
+                <div className={styles.emptyIcon}>✓</div>
+                <h3>Ready for independent verification</h3>
+                <p>Complete the account inputs on the left. Chambers will calculate the contractual amount, credit payments, compare the client claim and show the full repayment schedule here.</p>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.panelBody}>
+              <div className={styles.resultMetrics}>
+                <ResultMetric label="Principal" value={money(snapshot?.principal)} />
+                <ResultMetric label="Total interest" value={money(snapshot?.contractual_interest)} />
+                <ResultMetric label="Total repayable" value={money(snapshot?.total_repayable)} />
+                <ResultMetric label="Verified outstanding" value={money(snapshot?.verified_outstanding)} />
+              </div>
+
+              <div className={styles.methodStrip}>
+                <span><strong>{methodLabel(snapshot?.method || payload?.verification?.method)}</strong><br />{snapshot?.term_months || payload?.verification?.term_months} month contractual calculation</span>
+                <span><strong>Demand deadline</strong><br />{preview.deadline}</span>
+              </div>
+
+              {preview.blockers.length > 0 && (
+                <div className={styles.notice}><strong>Generation blocked</strong><ul>{preview.blockers.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              )}
+              {preview.warnings.length > 0 && (
+                <div className={styles.warning}><strong>Verification warnings</strong><ul>{preview.warnings.map((item) => <li key={item}>{item}</li>)}</ul></div>
+              )}
+
+              <div className={styles.scheduleWrap}>
+                <table className={styles.schedule}>
+                  <thead>
+                    <tr><th>Period</th><th>Opening</th><th>Principal</th><th>Interest</th><th>Instalment</th><th>Closing</th></tr>
+                  </thead>
+                  <tbody>
+                    {(snapshot?.schedule || []).map((row) => (
+                      <tr key={row.period}>
+                        <td>{row.period}</td>
+                        <td>{money(row.opening_balance)}</td>
+                        <td>{money(row.principal_component)}</td>
+                        <td>{money(row.interest)}</td>
+                        <td><strong>{money(row.instalment)}</strong></td>
+                        <td>{money(row.closing_balance)}</td>
+                      </tr>
+                    ))}
+                    {(snapshot?.schedule || []).length === 0 && <tr><td colSpan={6}>No schedule returned for this calculation.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+
+              {verificationHash && <p style={{fontSize:10,color:"#82909a",overflowWrap:"anywhere",margin:"10px 0 0"}}>Verification hash: {verificationHash}</p>}
+
+              <div className={styles.resultActions}>
+                <button type="button" className={styles.primaryButton} disabled={!preview.eligible || actionBusy !== ""} onClick={() => download("pdf")}>{actionBusy === "pdf" ? "Generating PDF…" : "Download PDF"}</button>
+                <button type="button" className={styles.secondaryButton} disabled={!preview.eligible || actionBusy !== ""} onClick={() => download("docx")}>{actionBusy === "docx" ? "Generating DOCX…" : "Download DOCX"}</button>
+                <button type="button" className={styles.ghostButton} disabled={!preview.eligible || !preview.html || actionBusy !== ""} onClick={printPreview}>Print preview</button>
+              </div>
+
+              <div className={styles.vaultRow}>
+                <Field label="Save verified letter to matter">
+                  <select value={matterId} onChange={(event) => setMatterId(event.target.value)}>
+                    <option value="">Select matter…</option>
+                    {matters.map((matter) => <option key={matter.id} value={matter.id}>{matter.matter_reference || `Matter ${matter.id}`} — {matter.title || "Untitled matter"}</option>)}
+                  </select>
+                </Field>
+                <button type="button" className={styles.secondaryButton} disabled={!preview.eligible || !matterId || actionBusy !== ""} onClick={saveToMatter}>{actionBusy === "vault" ? "Saving…" : "Save DOCX + PDF"}</button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
+
+      {preview?.html && (
+        <section className={`${styles.panel} ${styles.previewPanel}`}>
+          <div className={styles.previewToolbar}>
+            <div><h2>Approved letter preview</h2><p>Rendered from the supplied Lelefa Chambers template with its approved header and footer.</p></div>
+            <div className={styles.resultActions} style={{marginTop:0}}>
+              <button type="button" className={styles.ghostButton} onClick={printPreview}>Print</button>
+              <button type="button" className={styles.primaryButton} disabled={!preview.eligible || actionBusy !== ""} onClick={() => download("pdf")}>PDF</button>
+            </div>
+          </div>
+          <iframe title="Demand letter preview" srcDoc={preview.html} className={styles.previewFrame} />
+        </section>
+      )}
     </div>
   );
 }
 
-function Section({title,children}:{title:string;children:React.ReactNode}) {
-  return <fieldset style={{border:0,padding:0,margin:"26px 0"}}><legend style={{fontWeight:700,marginBottom:12}}>{title}</legend>{children}</fieldset>;
+function Metric({ label, value, hint, status }: { label: string; value: string; hint: string; status?: "good" | "bad" }) {
+  return (
+    <div className={styles.metricCard}>
+      <div className={styles.metricLabel}>{label}</div>
+      <div className={`${styles.metricValue} ${status === "good" ? styles.statusGood : status === "bad" ? styles.statusBad : ""}`}>{value}</div>
+      <div className={styles.metricHint}>{hint}</div>
+    </div>
+  );
 }
 
-function Field({label,children}:{label:string;children:React.ReactNode}) {
-  return <label style={{display:"grid",gap:6,marginBottom:12}}><span style={{fontSize:13,fontWeight:600}}>{label}</span>{children}</label>;
+function ResultMetric({ label, value }: { label: string; value: string }) {
+  return <div className={styles.resultMetric}><span>{label}</span><strong>{value}</strong></div>;
+}
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <fieldset className={styles.formSection}>
+      <legend className={styles.sectionTitle}>{title}</legend>
+      <div className={styles.formGrid}>{children}</div>
+    </fieldset>
+  );
+}
+
+function Field({ label, children, full = false }: { label: string; children: ReactNode; full?: boolean }) {
+  return <label className={`${styles.field} ${full ? styles.fullField : ""}`}><span>{label}</span>{children}</label>;
 }
