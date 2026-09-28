@@ -41,7 +41,7 @@ def test_verified_debt_generates_demand_letter_html():
     assert result.amount_summary["verified_outstanding"] == "M 928.00"
     assert result.html is not None
     assert "LELEFA CHAMBERS" in result.html
-    assert "Mpho Moletsane" in result.html
+    assert "MPHO MOLETSANE" in result.html
     assert "Advocate Mats'epe Lelefa, LLM" in result.html
     assert "Lenyora House, Office No. 4" in result.html
 
