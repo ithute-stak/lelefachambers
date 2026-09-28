@@ -5,13 +5,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libreoffice-writer fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY alembic.ini ./alembic.ini
 COPY alembic ./alembic
 COPY app ./app
-RUN mkdir -p /app/uploads /app/private-legal-vault
+RUN mkdir -p /app/uploads /app/private-legal-vault /app/legal-vault
 
 EXPOSE 8000
 
