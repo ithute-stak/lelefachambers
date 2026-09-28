@@ -27,7 +27,7 @@ services:
       retries: 20
 
   api:
-    image: ghcr.io/ithute-stak/lelefachambers-api:${LELEFA_IMAGE_TAG:-latest}
+    image: ghcr.io/ithute-stak/lelefachambers-api:${LELEFA_IMAGE_TAG:?Set LELEFA_IMAGE_TAG to the tested Git commit SHA}
     restart: unless-stopped
     env_file: .env
     environment:
@@ -53,7 +53,7 @@ services:
           - lelefachambers-api
 
   worker:
-    image: ghcr.io/ithute-stak/lelefachambers-api:${LELEFA_IMAGE_TAG:-latest}
+    image: ghcr.io/ithute-stak/lelefachambers-api:${LELEFA_IMAGE_TAG:?Set LELEFA_IMAGE_TAG to the tested Git commit SHA}
     restart: unless-stopped
     env_file: .env
     command: ["python", "-m", "app.worker"]
@@ -76,7 +76,7 @@ services:
       disable: true
 
   web:
-    image: ghcr.io/ithute-stak/lelefachambers-web:${LELEFA_IMAGE_TAG:-latest}
+    image: ghcr.io/ithute-stak/lelefachambers-web:${LELEFA_IMAGE_TAG:?Set LELEFA_IMAGE_TAG to the tested Git commit SHA}
     restart: unless-stopped
     env_file: .env
     environment:
